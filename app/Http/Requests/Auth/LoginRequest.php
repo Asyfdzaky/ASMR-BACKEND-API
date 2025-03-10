@@ -68,6 +68,10 @@ class LoginRequest extends FormRequest
         RateLimiter::clear($this->throttleKey());
 
     }
+    public function IsRemember(): bool
+    {
+        return $this->boolean('remember');
+    }
 
     /**
      * Ensure the login request is not rate limited.

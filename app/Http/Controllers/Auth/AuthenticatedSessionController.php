@@ -24,6 +24,7 @@ class AuthenticatedSessionController extends Controller
             return response()->json([
                 'message' => 'Login berhasil',
                 'token' => $token,
+                'Rember' => $request->IsRemember(),
                 'user' => $user,
             ], 200);
         } catch (\Exception $e) {

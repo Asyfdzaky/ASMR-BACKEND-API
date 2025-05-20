@@ -50,19 +50,17 @@ class LoginRequest extends FormRequest
             ]);
         }
         $user = Auth::user();
-        if ($user->role === 'Warga') {
-            $warga = Warga::where('id_users', $user->id)->first();
+        if ($user->role !== 'Admin') {
+    if (!$user->status_akun) {
+        Auth::logout();
 
-            if ($warga && !$user->status_akun) {
-                Auth::logout();
-
-                response()->json([
-                    'message' => 'Akun Anda belum disetujui oleh admin.',
-                ], 401)->send();
-                
-                exit; // Pastikan proses berhenti setelah mengirim respons
-            }
-        }
+        response()->json([
+            'message' => 'Akun Anda belum disetujui oleh admin.',
+        ], 401)->send();
+        
+        exit;
+    }
+}
 
 
         RateLimiter::clear($this->throttleKey());

@@ -30,6 +30,8 @@ class AuthenticatedSessionController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Login gagal',
+                'error' => $e->getMessage(),
+                'status' => 'error',
             ], 400);
         }
     }

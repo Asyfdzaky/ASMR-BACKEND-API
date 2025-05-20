@@ -1,21 +1,46 @@
 <?php
 
-use App\Http\Controllers\GetRtRW;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\GetRtRW;
 use App\Http\Controllers\RegisterPejabatController;
+use App\Http\Controllers\SuratController;
 
-Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
+// -------------------------
+// AUTHENTICATED USER ROUTE
+// -------------------------
+Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
-Route::get('/RW/list',[GetRtRW::class, 'GetRW']);
-Route::get('/RT/list/{id}',[GetRtRW::class, 'GetRT']);
 
-Route::post('/register/pejabat', [RegisterPejabatController::class, 'Store']);
-Route::put('/pejabat/{id}', [RegisterPejabatController::class, 'update']);
-Route::delete('/pejabat/{id}', [RegisterPejabatController::class, 'destroy']);
-
-Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function () {
-
+// -------------------------
+// WILAYAH (RT/RW)
+// -------------------------
+Route::prefix('wilayah')->group(function () {
+    Route::get('/rw', [GetRtRW::class, 'GetRW']);           // List semua RW
+    Route::get('/rt/{id_rw}', [GetRtRW::class, 'GetRT']);   // List RT berdasarkan RW
 });
-require __DIR__.'/auth.php';    
+
+// -------------------------
+// PEJABAT RT-RW (ADMIN ONLY)
+// -------------------------
+Route::middleware(['auth:sanctum'])->prefix('pejabat')->group(function () {
+    Route::post('/register', [RegisterPejabatController::class, 'store']);   // Registrasi pejabat
+    Route::put('/{id}', [RegisterPejabatController::class, 'update']);       // Update pejabat
+    Route::delete('/{id}', [RegisterPejabatController::class, 'destroy']);   // Hapus pejabat
+});
+
+// -------------------------
+// PENGAJUAN & APPROVAL SURAT (USER YANG LOGIN)
+// -------------------------
+Route::middleware(['auth:sanctum'])->prefix('surat')->group(function () {
+    Route::get('/', [SuratController::class, 'getAllPengajuanSurat']);               // Semua pengajuan (bisa filter)
+    Route::get('/pending/rt/{id_rt}', [SuratController::class, 'getPendingSuratRT']); // Pending approval oleh RT
+    Route::get('/pending/rw/{id_rw}', [SuratController::class, 'getPendingSuratRW']); // Pending approval oleh RW
+    Route::put('/{id_pengajuan}/approval', [SuratController::class, 'updateApprovalStatus']); // Setujui/Tolak
+});
+
+// -------------------------
+// AUTH (Bawaan Laravel Breeze / Sanctum)
+// -------------------------
+require __DIR__.'/auth.php';

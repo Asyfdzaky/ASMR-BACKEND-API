@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rules;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Storage;
 
 class RegisterPejabatController extends Controller
@@ -23,7 +24,7 @@ class RegisterPejabatController extends Controller
 
             $request->validate([
                 "email" => "required|email|unique:users",
-                'password' => ['required', Rules\Password::defaults()],
+                "password" => ['required', Rules\Password::defaults()],
                 "nama" => "required|string",
                 "nomer_kk" => "required|numeric|unique:wargas,nomor_kk",
                 "nik" => "required|numeric|unique:wargas,nik",
@@ -37,7 +38,7 @@ class RegisterPejabatController extends Controller
                 "kabupaten" => "required|string",
                 "provinsi" => "required|string",
                 'periode' => 'required|string',
-                'role' => 'required|in:rt,rw',
+                'role' => 'required',
                 'ttd' => 'required|file|mimes:png,jpg,jpeg|max:2048',
             ]);
 
@@ -56,7 +57,7 @@ class RegisterPejabatController extends Controller
                 "email" => $request->email,
                 "password" => Hash::make($request->password),
                 "role" => $request->role, // Default role, will be updated if needed
-                "status" => "NonAktif", // Needs admin activation
+                "status" => 1, // Needs admin activation
             ]);
 
             // Create address
@@ -81,14 +82,14 @@ class RegisterPejabatController extends Controller
             ]);
 
             // Assign official position
-            if ($request->role == "rt") {
+            if ($request->role == "PejabatRT") {
                 pejabatRT::create([
                     "id_rt" => $request->id_rt,
                     "id_warga" => $warga->id,
                     "periode" => $request->periode,
                     "ttd" => $ttdUrl,
                 ]); 
-            } elseif ($request->role == "rw") {
+            } elseif ($request->role == "PejabatRW") {
                 pejabatRW::create([
                     "id_rw" => $request->id_rw,
                     "id_warga" => $warga->id,
@@ -98,16 +99,16 @@ class RegisterPejabatController extends Controller
             }
 
             DB::commit();
-
+            event(new Registered($user));
             return response()->json([
-                "message" => "Registrasi pejabat berhasil! Tunggu aktivasi dari admin.",
+                "message" => "Registrasi pejabat berhasil",
                 "data" => [
                     "user" => $user,
                     "warga" => $warga,
                     "detailAlamat" => $detailAlamat,
                     "ttd" => $ttdUrl,
                     "role" => $request->role,
-                    "pejabat" => $request->role == "rt" ? "RT" : "RW",
+                    "pejabat" => $request->role,
                     "periode" => $request->periode,
                     "id_rt" => $request->id_rt,                
                     "id_rw" => $request->id_rw,

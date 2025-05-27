@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DiagramController;
 use Illuminate\Http\Request;
 use App\Http\Controllers\GetRtRW;
 use Illuminate\Support\Facades\Route;
@@ -26,7 +27,7 @@ Route::prefix('wilayah')->group(function () {
 // -------------------------
 // PEJABAT RT-RW (ADMIN ONLY)
 // -------------------------
-Route::middleware(['auth:sanctum'])->prefix('pejabat')->group(function () {
+Route::middleware(['auth:sanctum','admin'])->prefix('pejabat')->group(function () {
     Route::post('/register', [RegisterPejabatController::class, 'store']);   // Registrasi pejabat
     Route::put('/{id}', [RegisterPejabatController::class, 'update']);       // Update pejabat
     Route::delete('/{id}', [RegisterPejabatController::class, 'destroy']);   // Hapus pejabat
@@ -53,6 +54,10 @@ Route::prefix('biodata')->group(function () {
     Route::get('/count', [WargaController::class, 'CountData']);   // Count data summary
     Route::put('/rt/{id}', [WargaController::class, 'updateRT']);  // Update RT dan pejabat RT
     Route::put('/rw/{id}', [WargaController::class, 'updateRW']);  // Update RW dan pejabat RW
+});
+Route::prefix('grafik')->group(function () {
+    Route::get('/jumlah-pengajuan-bulan', [DiagramController::class, 'jumlahPengajuanPerBulan']);
+    Route::get('/jumlah-pengajuan-jenis', [DiagramController::class, 'jumlahPengajuanPerJenis']);
 });
 // -------------------------
 // AUTH (Bawaan Laravel Breeze / Sanctum)

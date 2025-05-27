@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Warga;
 use Illuminate\Http\Request;
 use App\Models\ApprovalSurat;
+use App\Models\DetailAlamat;
 use App\Models\PengajuanSurat;
 use App\Models\DetailPemohonSurat;
 use Illuminate\Support\Facades\Auth;
@@ -40,13 +41,16 @@ class PengajuanSuratController extends Controller
 
         $validator = Validator::make($request->all(), [
             'nama_pemohon' => 'required|string',
-            'nik_pemohon' => 'required|string|unique:detail_pemohon,nik_pemohon',
+            'nik_pemohon' => 'required|string',
             'no_kk_pemohon' => 'required|string',
             'phone_pemohon' => 'required|string',
             'tempat_tanggal_lahir_pemohon' => 'required|string',
             'jenis_kelamin_pemohon' => 'required|in:Pria,Perempuan',
             'id_detailAlamat' => 'required|exists:detail_alamat,id',
             'jenis_surat' => 'required|string',
+            "alamat" => "required|string",
+            "kabupaten" => "required|string",
+            "provinsi" => "required|string",
             'keterangan' => 'nullable|string',
         ]);
 
@@ -55,9 +59,15 @@ class PengajuanSuratController extends Controller
         }
 
         try {
+            
+            $detailAlamat = DetailAlamat::create([
+                "alamat" => $request->alamat,
+                "kabupaten" => $request->kabupaten,
+                "provinsi" => $request->provinsi,
+            ]); 
             $pemohon = DetailPemohonSurat::create([
                 'id_warga' => $warga->id,
-                'id_detailAlamat' => $request->id_detailAlamat,
+                'id_detailAlamat' => $detailAlamat->id,
                 'nama_pemohon' => $request->nama_pemohon,
                 'nik_pemohon' => $request->nik_pemohon,
                 'no_kk_pemohon' => $request->no_kk_pemohon,
@@ -65,7 +75,7 @@ class PengajuanSuratController extends Controller
                 'tempat_tanggal_lahir_pemohon' => $request->tempat_tanggal_lahir_pemohon,
                 'jenis_kelamin_pemohon' => $request->jenis_kelamin_pemohon,
             ]);
-
+            
             $pengajuan = PengajuanSurat::create([
                 'id_warga' => $warga->id,
                 'id_detailPemohon' => $pemohon->id,
@@ -74,7 +84,6 @@ class PengajuanSuratController extends Controller
                 'status' => 'Diajukan',
                 'created_at' => now()
             ]);
-
             ApprovalSurat::create([
                 'id_pengajuan' => $pengajuan->id,
                 'status_approval' => 'Pending',

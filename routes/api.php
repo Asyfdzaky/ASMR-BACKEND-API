@@ -1,13 +1,14 @@
 <?php
 
-use App\Http\Controllers\DiagramController;
 use Illuminate\Http\Request;
 use App\Http\Controllers\GetRtRW;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SuratController;
-use App\Http\Controllers\suratPDFController;
-use App\Http\Controllers\RegisterPejabatController;
 use App\Http\Controllers\WargaController;
+use App\Http\Controllers\DiagramController;
+use App\Http\Controllers\suratPDFController;
+use App\Http\Controllers\programKerjaController;
+use App\Http\Controllers\RegisterPejabatController;
 
 // -------------------------
 // AUTHENTICATED USER ROUTE
@@ -58,6 +59,13 @@ Route::prefix('biodata')->group(function () {
 Route::prefix('grafik')->group(function () {
     Route::get('/jumlah-pengajuan-bulan', [DiagramController::class, 'jumlahPengajuanPerBulan']);
     Route::get('/jumlah-pengajuan-jenis', [DiagramController::class, 'jumlahPengajuanPerJenis']);
+});
+Route::prefix('proker')->group(function(){
+    Route::get('/',[programKerjaController::class, 'index']); // Get semua program kerja
+    Route::get('/{id}',[programKerjaController::class, 'show']); // Get program kerja by id
+    Route::post('/',[programKerjaController::class, 'store']); // Tambah program kerja
+    Route::put('/{id}',[programKerjaController::class, 'update']); // Update program kerja
+    Route::delete('/{id}',[programKerjaController::class, 'destroy']); // Hapus program kerja
 });
 // -------------------------
 // AUTH (Bawaan Laravel Breeze / Sanctum)

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Surat Pengantar KTP</title>
+    <style>
+        body {
+            font-family: Times New Roman, serif;
+            margin: 40px;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+        .kop-surat {
+            text-align: center;
+            border-bottom: 3px double black;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .kop-surat h3, .kop-surat h2 {
+            margin: 0;
+            padding: 3px 0;
+        }
+        .nomor-surat {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .isi-surat {
+            margin: 20px 0;
+        }
+        .isi-surat table {
+            margin: 15px 0;
+        }
+        .isi-surat table td {
+            padding: 3px 10px 3px 0;
+        }
+        .ttd-area {
+            margin-top: 40px;
+            float: right;
+            text-align: center;
+            width: 200px;
+        }
+        .ttd-area img {
+            height: 80px;
+            width: 100%;
+            object-fit: contain;
+            margin: 10px 0;
+        }
+        .clear {
+            clear: both;
+        }
+    </style>
+</head>
+<body>
+    <div class="kop-surat">
+        <h3>PEMERINTAH KABUPATEN {{KABUPATEN}}</h3>
+        <h3>KECAMATAN {{KECAMATAN}}</h3>
+        <h2>KELURAHAN {{KELURAHAN}}</h2>
+        <h3>{{ID_RT}} {{ID_RW}}</h3>
+        <p>{{ALAMAT_KANTOR}}</p>
+    </div>
+
+    <div class="nomor-surat">
+        <h4>SURAT PENGANTAR KTP</h4>
+        <p>Nomor: {{NO_SURAT}}</p>
+    </div>
+
+    <div class="isi-surat">
+        <p>Yang bertanda tangan di bawah ini Ketua {{ID_RT}} {{ID_RW}} {{KELURAHAN}} {{KECAMATAN}}, menerangkan dengan sebenarnya bahwa:</p>
+        
+        <table>
+            <tr>
+                <td width="160">Nama Lengkap</td>
+                <td width="10">:</td>
+                <td>{{NAMA_WARGA}}</td>
+            </tr>
+            <tr>
+                <td>NIK</td>
+                <td>:</td>
+                <td>{{NIK_WARGA}}</td>
+            </tr>
+            <tr>
+                <td>Nomor KK</td>
+                <td>:</td>
+                <td>{{NOMOR_KK}}</td>
+            </tr>
+            <tr>
+                <td>Tempat, Tanggal Lahir</td>
+                <td>:</td>
+                <td>{{TEMPAT_TGL_LAHIR}}</td>
+            </tr>
+            <tr>
+                <td>Jenis Kelamin</td>
+                <td>:</td>
+                <td>{{JENIS_KELAMIN}}</td>
+            </tr>
+            <tr>
+                <td>Agama</td>
+                <td>:</td>
+                <td>{{AGAMA}}</td>
+            </tr>
+            <tr>
+                <td>Alamat</td>
+                <td>:</td>
+                <td>{{ALAMAT_WARGA}}</td>
+            </tr>
+        </table>
+
+        <p>Adalah benar warga {{ID_RT}} {{ID_RW}} {{KELURAHAN}} {{KECAMATAN}} dan yang bersangkutan hendak membuat KTP.</p>
+        
+        <p>Demikian surat pengantar ini dibuat untuk dipergunakan sebagaimana mestinya.</p>
+    </div>
+
+    <div class="ttd-area">
+        <p>{{KELURAHAN}}, {{TANGGAL_SURAT}}</p>
+        <p>Ketua {{ID_RT}}</p>
+        <img src="{{TTD_RT}}" alt="Tanda Tangan RT">
+        <p>{{NAMA_RT}}</p>
+    </div>
+    <div class="ttd-area">
+        <p>Mengetahui,</p>
+        <p>Ketua {{ID_RW}}</p>
+        <img src="{{TTD_RW}}" alt="Tanda Tangan RW">
+        <p>{{NAMA_RW}}</p>
+    </div>
+
+    <div class="clear"></div>
+</body>
+</html>

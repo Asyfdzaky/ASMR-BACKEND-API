@@ -1,10 +1,11 @@
 <?php
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\GetRtRW;
-use App\Http\Controllers\RegisterPejabatController;
+use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SuratController;
+use App\Http\Controllers\suratPDFController;
+use App\Http\Controllers\RegisterPejabatController;
 
 // -------------------------
 // AUTHENTICATED USER ROUTE
@@ -39,7 +40,9 @@ Route::middleware(['auth:sanctum'])->prefix('surat')->group(function () {
     Route::get('/pending/rw/{id_rw}', [SuratController::class, 'getPendingSuratRW']); // Pending approval oleh RW
     Route::put('/{id_pengajuan}/approval', [SuratController::class, 'updateApprovalStatus']); // Setujui/Tolak
 });
-
+ Route::get('/surat/{pengajuan}/generate', [suratPDFController::class, 'generateAndSave']);
+Route::get('/surat/{pengajuan}/download', [suratPDFController::class, 'download']);
+Route::get('/surat/{pengajuan}/preview', [suratPDFController::class, 'preview']);
 // -------------------------
 // AUTH (Bawaan Laravel Breeze / Sanctum)
 // -------------------------

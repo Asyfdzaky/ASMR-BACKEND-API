@@ -48,24 +48,25 @@ Route::middleware('auth:sanctum')->prefix('surat')->group(function () {
     Route::get('/{pengajuan}/generate', [SuratPDFController::class, 'generateAndSave']);   // Buat PDF
     Route::get('/{pengajuan}/download', [SuratPDFController::class, 'download']);          // Download PDF
     Route::get('/{pengajuan}/preview', [SuratPDFController::class, 'preview']);            // Preview PDF
-});
-Route::prefix('biodata')->group(function () {
-    Route::get('/', [WargaController::class, 'index']);            // Get semua data RT, RW, Warga
-    Route::get('/pending-warga', [WargaController::class, 'PendingWarga']); // Warga yang status non aktif
-    Route::get('/count', [WargaController::class, 'CountData']);   // Count data summary
-    Route::put('/rt/{id}', [WargaController::class, 'updateRT']);  // Update RT dan pejabat RT
-    Route::put('/rw/{id}', [WargaController::class, 'updateRW']);  // Update RW dan pejabat RW
-});
-Route::prefix('grafik')->group(function () {
-    Route::get('/jumlah-pengajuan-bulan', [DiagramController::class, 'jumlahPengajuanPerBulan']);
-    Route::get('/jumlah-pengajuan-jenis', [DiagramController::class, 'jumlahPengajuanPerJenis']);
-});
-Route::prefix('proker')->group(function(){
-    Route::get('/',[programKerjaController::class, 'index']); // Get semua program kerja
-    Route::get('/{id}',[programKerjaController::class, 'show']); // Get program kerja by id
-    Route::post('/',[programKerjaController::class, 'store']); // Tambah program kerja
-    Route::put('/{id}',[programKerjaController::class, 'update']); // Update program kerja
-    Route::delete('/{id}',[programKerjaController::class, 'destroy']); // Hapus program kerja
+    
+    Route::prefix('biodata')->group(function () {
+        Route::get('/', [WargaController::class, 'index']);            // Get semua data RT, RW, Warga
+        Route::get('/pending-warga', [WargaController::class, 'PendingWarga']); // Warga yang status non aktif
+        Route::get('/count', [WargaController::class, 'CountData']);   // Count data summary
+        Route::put('/rt/{id}', [WargaController::class, 'updateRT']);  // Update RT dan pejabat RT
+        Route::put('/rw/{id}', [WargaController::class, 'updateRW']);  // Update RW dan pejabat RW
+    });
+    Route::prefix('grafik')->group(function () {
+        Route::get('/jumlah-pengajuan-bulan', [DiagramController::class, 'jumlahPengajuanPerBulan']);
+        Route::get('/jumlah-pengajuan-jenis', [DiagramController::class, 'jumlahPengajuanPerJenis']);
+    });
+    Route::prefix('proker')->group(function(){
+        Route::get('/',[programKerjaController::class, 'index']); // Get semua program kerja
+        Route::get('/{id}',[programKerjaController::class, 'show']); // Get program kerja by id
+        Route::post('/',[programKerjaController::class, 'store']); // Tambah program kerja
+        Route::put('/{id}',[programKerjaController::class, 'update']); // Update program kerja
+        Route::delete('/{id}',[programKerjaController::class, 'destroy']); // Hapus program kerja
+    });
 });
 // -------------------------
 // AUTH (Bawaan Laravel Breeze / Sanctum)

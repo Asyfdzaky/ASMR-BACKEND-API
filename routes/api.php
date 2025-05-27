@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SuratController;
 use App\Http\Controllers\suratPDFController;
 use App\Http\Controllers\RegisterPejabatController;
+use App\Http\Controllers\WargaController;
 
 // -------------------------
 // AUTHENTICATED USER ROUTE
@@ -34,15 +35,25 @@ Route::middleware(['auth:sanctum'])->prefix('pejabat')->group(function () {
 // -------------------------
 // PENGAJUAN & APPROVAL SURAT (USER YANG LOGIN)
 // -------------------------
-Route::middleware(['auth:sanctum'])->prefix('surat')->group(function () {
-    Route::get('/', [SuratController::class, 'getAllPengajuanSurat']);               // Semua pengajuan (bisa filter)
-    Route::get('/pending/rt/{id_rt}', [SuratController::class, 'getPendingSuratRT']); // Pending approval oleh RT
-    Route::get('/pending/rw/{id_rw}', [SuratController::class, 'getPendingSuratRW']); // Pending approval oleh RW
-    Route::put('/{id_pengajuan}/approval', [SuratController::class, 'updateApprovalStatus']); // Setujui/Tolak
+Route::middleware('auth:sanctum')->prefix('surat')->group(function () {
+    // Pengajuan & Approval
+    Route::get('/', [SuratController::class, 'getAllPengajuanSurat']);                   // Semua pengajuan
+    Route::get('/pending/rt/{id_rt}', [SuratController::class, 'getPendingSuratRT']);     // Pending oleh RT
+    Route::get('/pending/rw/{id_rw}', [SuratController::class, 'getPendingSuratRW']);     // Pending oleh RW
+    Route::put('/{id_pengajuan}/approval', [SuratController::class, 'updateApprovalStatus']); // Approve/tolak
+
+    // PDF Surat (akses tetap pakai auth:sanctum untuk keamanan)
+    Route::get('/{pengajuan}/generate', [SuratPDFController::class, 'generateAndSave']);   // Buat PDF
+    Route::get('/{pengajuan}/download', [SuratPDFController::class, 'download']);          // Download PDF
+    Route::get('/{pengajuan}/preview', [SuratPDFController::class, 'preview']);            // Preview PDF
 });
- Route::get('/surat/{pengajuan}/generate', [suratPDFController::class, 'generateAndSave']);
-Route::get('/surat/{pengajuan}/download', [suratPDFController::class, 'download']);
-Route::get('/surat/{pengajuan}/preview', [suratPDFController::class, 'preview']);
+Route::prefix('biodata')->group(function () {
+    Route::get('/', [WargaController::class, 'index']);            // Get semua data RT, RW, Warga
+    Route::get('/pending-warga', [WargaController::class, 'PendingWarga']); // Warga yang status non aktif
+    Route::get('/count', [WargaController::class, 'CountData']);   // Count data summary
+    Route::put('/rt/{id}', [WargaController::class, 'updateRT']);  // Update RT dan pejabat RT
+    Route::put('/rw/{id}', [WargaController::class, 'updateRW']);  // Update RW dan pejabat RW
+});
 // -------------------------
 // AUTH (Bawaan Laravel Breeze / Sanctum)
 // -------------------------

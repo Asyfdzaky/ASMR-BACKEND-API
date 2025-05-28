@@ -33,6 +33,6 @@ class DetailPemohonSurat extends Model
      */
     public function pengajuanSurat()
     {
-        return $this->hasMany(PengajuanSurat::class, 'id_detailPemohon');
+        return $this->hasMany(PengajuanSurat::class, 'id_detail_pemohon');
     }
 }

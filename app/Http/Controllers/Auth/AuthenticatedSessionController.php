@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\Warga;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -19,13 +20,19 @@ class AuthenticatedSessionController extends Controller
         try {
             $request->authenticate();
             $user = $request->user();
-            $token = $user->createToken('auth_token')->plainTextToken;
+            $warga = Warga::where('id_users', $user->id)->first();
+            $plainTextToken = $user->createToken('auth_token')->plainTextToken;
+
+            $header = base64_encode(json_encode(['alg' => 'HS256', 'typ' => 'JWT']));
+            $payload = base64_encode(json_encode(['id' => $user->id, 'role' => $user->role, 'email' => $user->email, 'name' => $warga->nama, 'no_kk' => $warga->nomor_kk]));
+            $token = $header . '.' . $payload . '.' . $plainTextToken;
+
 
             return response()->json([
                 'message' => 'Login berhasil',
                 'token' => $token,
                 'Rember' => $request->IsRemember(),
-                'user' => $user,
+                // 'user' => $user,
             ], 200);
         } catch (\Exception $e) {
             return response()->json([

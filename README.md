@@ -137,9 +137,9 @@ _(Requires `auth:sanctum` and `admin` middleware)_
 _(Requires `auth:sanctum` middleware)_
 
 -   `GET /api/surat/data-warga` - Get authenticated user's resident data for submission forms.
--   `POST /api/surat/ajukan` - Submit a new letter application.
+-   `POST /api/surat/pengajuan` - Submit a new letter application.
 -   `GET /api/surat/riwayat-pengajuan` - Get recent letter submissions for the authenticated user.
--   `GET /api/surat/riwayat/{id_warga}` - Get detailed history of letter submissions for a specific resident.
+-   `GET /api/surat/riwayat-prngajuan/{id_warga}` - Get detailed history of letter submissions for a specific resident.
 
 ### Approval Surat (Letter Approvals)
 

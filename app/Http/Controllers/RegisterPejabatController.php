@@ -197,6 +197,22 @@ class RegisterPejabatController extends Controller
         ], 500);
     }
 }
+
+public function getWargaByNIK($nik)
+{
+    try {
+        $dataWarga = Warga::where('nik', $nik)->with(['alamat', 'user'])->get();
+        return response()->json([
+            'warga' => $dataWarga,
+        ], 200);
+    } catch (\Exception $e) {
+        return response()->json([
+            'message' => 'Terjadi kesalahan saat mengambil data',
+            'error' => $e->getMessage()
+        ], 500);
+    }
+}
+
 public function destroy($id, Request $request)
 {
     try {

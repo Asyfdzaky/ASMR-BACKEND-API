@@ -15,4 +15,10 @@ class pejabatRW extends Model
     {
         return $this->belongsTo(RW::class, 'id_rw');
     }
+
+    public function approvalSurat()
+    {
+        return $this->hasMany(ApprovalSurat::class, 'id_pejabat_rw');
+    }
+    
 }

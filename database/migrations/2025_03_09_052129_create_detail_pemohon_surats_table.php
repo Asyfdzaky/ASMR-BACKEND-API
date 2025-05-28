@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('alamat_pemohon');
             $table->string('phone_pemohon');
             $table->string('tempat_tanggal_lahir_pemohon');
-            $table->enum('jenis_kelamin_pemohon', ['Pria', 'Perempuan']);
+            $table->enum('jenis_kelamin_pemohon', ['Laki-Laki', 'Perempuan']);
             $table->timestamps();
         });
     }

@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('nik')->unique();
             $table->enum('jenis_kelamin', ['Laki-Laki', 'Perempuan']);
             $table->string('phone');
+            $table->enum('agama', ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghucu']);
             $table->string('tempat_lahir');
             $table->date('tanggal_lahir');
             $table->timestamps();

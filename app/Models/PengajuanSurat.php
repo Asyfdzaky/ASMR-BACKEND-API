@@ -11,7 +11,7 @@ class PengajuanSurat extends Model
 
     protected $fillable = [
         'id_warga',
-        'id_detailPemohon',
+        'id_detail_pemohon',
         'id_rt',
         'id_rw',
         'jenis_surat',

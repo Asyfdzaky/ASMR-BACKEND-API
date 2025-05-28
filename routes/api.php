@@ -48,7 +48,7 @@ Route::middleware('auth:sanctum')->prefix('surat')->group(function () {
     Route::get('/{pengajuan}/generate', [SuratPDFController::class, 'generateAndSave']);   // Buat PDF
     Route::get('/{pengajuan}/download', [SuratPDFController::class, 'download']);          // Download PDF
     Route::get('/{pengajuan}/preview', [SuratPDFController::class, 'preview']);            // Preview PDF
-    
+
     Route::prefix('biodata')->group(function () {
         Route::get('/', [WargaController::class, 'index']);            // Get semua data RT, RW, Warga
         Route::get('/pending-warga', [WargaController::class, 'PendingWarga']); // Warga yang status non aktif

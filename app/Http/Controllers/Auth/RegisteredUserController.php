@@ -16,6 +16,30 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Auth\Events\Registered;
+/**
+* @OA\Info(
+* version="1.0.0",
+* title="ASMR Backend API Documentation",
+* description="API Documentation for the ASMR project backend, managing residents, officials, letter submissions, and approvals.",
+* @OA\Contact(
+* email="asyfdzaky@example.com"
+* )
+* )
+*
+* @OA\Server(
+* url=L5_SWAGGER_CONST_HOST,
+* description="ASMR API Server"
+* )
+*
+* @OA\SecurityScheme(
+* securityScheme="bearerAuth",
+* in="header",
+* name="bearerAuth",
+* type="http",
+* scheme="bearer",
+* bearerFormat="JWT",
+* )
+*/
 
 class RegisteredUserController extends Controller
 {
@@ -23,6 +47,70 @@ class RegisteredUserController extends Controller
      * Handle an incoming registration request.
      *
      * @throws \Illuminate\Validation\ValidationException
+     */
+    /**
+     * Register a new resident user.
+     *
+     * @OA\Post(
+     * path="/api/register",
+     * operationId="registerUser",
+     * tags={"Authentication"},
+     * summary="Register a new resident user",
+     * description="Registers a new user with 'warga' role and creates associated resident and address data. Account requires admin activation.",
+     * @OA\RequestBody(
+     * required=true,
+     * @OA\JsonContent(
+     * required={"email","password","nama","nomer_kk","nik","jenis_kelamin","phone","tempat_lahir","tanggal_lahir","id_rt","id_rw","alamat","kabupaten","provinsi"},
+     * @OA\Property(property="email", type="string", format="email", example="john.doe@example.com"),
+     * @OA\Property(property="password", type="string", format="password", example="password"),
+     * @OA\Property(property="nama", type="string", example="John Doe"),
+     * @OA\Property(property="nomer_kk", type="string", example="1234567890123456"),
+     * @OA\Property(property="nik", type="string", example="1234567890123456"),
+     * @OA\Property(property="jenis_kelamin", type="string", enum={"laki-laki", "perempuan"}, example="laki-laki"),
+     * @OA\Property(property="phone", type="string", example="081234567890"),
+     * @OA\Property(property="tempat_lahir", type="string", example="Jakarta"),
+     * @OA\Property(property="tanggal_lahir", type="string", format="date", example="1990-01-01"),
+     * @OA\Property(property="id_rt", type="integer", example="1"),
+     * @OA\Property(property="id_rw", type="integer", example="1"),
+     * @OA\Property(property="alamat", type="string", example="Jl. Contoh No. 1"),
+     * @OA\Property(property="kabupaten", type="string", example="Sleman"),
+     * @OA\Property(property="provinsi", type="string", example="DI Yogyakarta"),
+     * )
+     * ),
+     * @OA\Response(
+     * response=200,
+     * description="Registration successful, awaiting admin activation.",
+     * @OA\JsonContent(
+     * @OA\Property(property="message", type="string", example="Registrasi berhasil! Tunggu aktivasi dari admin."),
+     * @OA\Property(property="data", type="object",
+     * @OA\Property(property="user", type="object"),
+     * @OA\Property(property="warga", type="object")
+     * )
+     * )
+     * ),
+     * @OA\Response(
+     * response=400,
+     * description="RT and RW mismatch",
+     * @OA\JsonContent(
+     * @OA\Property(property="error", type="string", example="RT dan RW tidak cocok")
+     * )
+     * ),
+     * @OA\Response(
+     * response=422,
+     * description="Validation error",
+     * @OA\JsonContent(
+     * @OA\Property(property="message", type="string", example="The given data was invalid."),
+     * @OA\Property(property="errors", type="object")
+     * )
+     * ),
+     * @OA\Response(
+     * response=500,
+     * description="Server error",
+     * @OA\JsonContent(
+     * @OA\Property(property="error", type="string")
+     * )
+     * )
+     * )
      */
     public function store(Request $request)
     {

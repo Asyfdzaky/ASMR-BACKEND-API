@@ -16,6 +16,7 @@ class Warga extends Model
         'id_rw',
         'nama',
         'nomor_kk',
+        'agama',
         'nik',
         'jenis_kelamin',
         'phone',

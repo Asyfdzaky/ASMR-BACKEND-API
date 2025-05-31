@@ -49,6 +49,6 @@ class User extends Authenticatable
     }
     public function Warga()
     {
-        return $this->hasOne(Warga::class, 'id_user');
+        return $this->hasOne(Warga::class, 'id_users');
     }
 }

@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('nik_pemohon');
             $table->string('no_kk_pemohon');
             $table->string('alamat_pemohon');
+            $table->string('agama_pemohon');
             $table->string('phone_pemohon');
             $table->string('tempat_tanggal_lahir_pemohon');
             $table->enum('jenis_kelamin_pemohon', ['Laki-Laki', 'Perempuan']);

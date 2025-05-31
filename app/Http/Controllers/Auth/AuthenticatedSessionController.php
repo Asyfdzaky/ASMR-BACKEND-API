@@ -7,8 +7,11 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Models\Warga;
+use App\Models\RT;
+use App\Models\RW;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -66,18 +69,25 @@ class AuthenticatedSessionController extends Controller
         try {
             $request->authenticate();
             $user = $request->user();
-            $warga = Warga::where('id_users', $user->id)->first();
+            $role = $user->role;
+            if ($role !== 'Admin'){
+                $warga = Warga::where('id_users', $user->id)->first();
+                $rt = RT::where('id', $warga->rt->id)->first();
+                $rw = RW::where('id', $warga->rt->rw->id)->first();
+                $payload = base64_encode(json_encode(['id' => $user->id, 'id_warga' => $warga->id, 'id_rt' => $rt->id, 'id_rw' => $rw->id, 'role' => $user->role, 'email' => $user->email, 'name' => $warga->nama, 'no_kk' => $warga->nomor_kk]));
+            } else {
+                $payload = base64_encode(json_encode(['id' => $user->id, 'role' => $user->role, 'email' => $user->email, 'name' => $user->name]));
+            }
             $plainTextToken = $user->createToken('auth_token')->plainTextToken;
 
             $header = base64_encode(json_encode(['alg' => 'HS256', 'typ' => 'JWT']));
-            $payload = base64_encode(json_encode(['id' => $user->id, 'role' => $user->role, 'email' => $user->email, 'name' => $warga->nama, 'no_kk' => $warga->nomor_kk]));
             $token = $header . '.' . $payload . '.' . $plainTextToken;
 
 
             return response()->json([
                 'message' => 'Login berhasil',
                 'token' => $token,
-                'Rember' => $request->IsRemember(),
+                // 'remember' => $request->IsRemember(),
                 // 'user' => $user,
             ], 200);
         } catch (\Exception $e) {
@@ -141,6 +151,19 @@ class AuthenticatedSessionController extends Controller
             // Pastikan token tidak null sebelum dihapus
             if ($user->currentAccessToken()) {
                 $user->tokens()->delete();
+
+                try {
+                    $sessionId = $request->session()->getId();
+                    if ($sessionId) {
+                        DB::table('sessions')->where('id', $sessionId)->delete();
+                        Log::info('Session berhasil dihapus untuk user ID: ' . $user->id);
+                    } else {
+                        Log::warning('Session ID tidak ditemukan saat logout untuk user ID: ' . $user->id);
+                    }
+                } catch (\Exception $sessionException) {
+                    Log::error('Gagal menghapus session saat logout untuk user ID: ' . $user->id . '. Error: ' . $sessionException->getMessage());
+                }
+
             } else {
                 Log::error('Logout gagal: Token tidak ditemukan atau sudah dihapus');
                 return response()->json([

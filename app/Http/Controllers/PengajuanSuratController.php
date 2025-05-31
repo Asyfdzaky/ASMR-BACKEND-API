@@ -10,6 +10,7 @@ use App\Models\PengajuanSurat;
 use App\Models\DetailPemohonSurat;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 
 class PengajuanSuratController extends Controller
 {
@@ -49,8 +50,8 @@ class PengajuanSuratController extends Controller
             // 'id_detailAlamat' => 'required|exists:detail_alasmat,id',
             'jenis_surat' => 'required|string',
             "alamat" => "required|string",
-            "kabupaten" => "required|string",
-            "provinsi" => "required|string",
+            // "kabupaten" => "required|string",
+            // "provinsi" => "required|string",
             'keterangan' => 'nullable|string',
         ]);
 
@@ -60,41 +61,50 @@ class PengajuanSuratController extends Controller
 
         try {
             
-            // $detailAlamat = DetailAlamat::create([
-            //     "alamat" => $request->alamat,
-            //     "kabupaten" => $request->kabupaten,
-            //     "provinsi" => $request->provinsi,
-            // ]); 
-            $pemohon = DetailPemohonSurat::create([
-                'id_warga' => $warga->id,
-                'alamat_pemohon' => $request->alamat. ", ". $request->kabupaten. ", ". $request->provinsi,
-                'nama_pemohon' => $request->nama_pemohon,
-                'nik_pemohon' => $request->nik_pemohon,
-                'no_kk_pemohon' => $request->no_kk_pemohon,
-                'phone_pemohon' => $request->phone_pemohon,
-                'tempat_tanggal_lahir_pemohon' => $request->tempat_tanggal_lahir_pemohon,
-                'jenis_kelamin_pemohon' => $request->jenis_kelamin_pemohon,
-            ]);
-            
-            $pengajuan = PengajuanSurat::create([
-                'id_warga' => $warga->id,
-                'id_rt' => $warga->rt->id,
-                'id_rw' => $warga->rt->rw->id,
-                'id_detail_pemohon' => $pemohon->id,
-                'jenis_surat' => $request->jenis_surat,
-                'keterangan' => $request->keterangan ?? "",
-                'status' => 'Diajukan',
-                'file_surat' => "",
-                'created_at' => now()
-            ]);
-            ApprovalSurat::create([
-                'id_pengajuan' => $pengajuan->id,
-                'id_pejabat_rt' => $warga->rt->id,
-                'id_pejabat_rw' => $warga->rt->rw->id,
-                'status_approval' => 'Pending',
-                'catatan' => null,
-                'approved_at' => null
-            ]);
+            DB::beginTransaction();
+            try {
+                // $detailAlamat = DetailAlamat::create([
+                //     "alamat" => $request->alamat,
+                //     "kabupaten" => $request->kabupaten,
+                //     "provinsi" => $request->provinsi,
+                // ]); 
+                $pemohon = DetailPemohonSurat::create([
+                    'id_warga' => $warga->id,
+                    'alamat_pemohon' => $request->alamat,
+                    'nama_pemohon' => $request->nama_pemohon,
+                    'nik_pemohon' => $request->nik_pemohon,
+                    'no_kk_pemohon' => $request->no_kk_pemohon,
+                    'phone_pemohon' => $request->phone_pemohon,
+                    'tempat_tanggal_lahir_pemohon' => $request->tempat_tanggal_lahir_pemohon,
+                    'jenis_kelamin_pemohon' => $request->jenis_kelamin_pemohon,
+                ]);
+                
+                $pengajuan = PengajuanSurat::create([
+                    'id_warga' => $warga->id,
+                    'id_rt' => $warga->rt->id,
+                    'id_rw' => $warga->rt->rw->id,
+                    'id_detail_pemohon' => $pemohon->id,
+                    'jenis_surat' => $request->jenis_surat,
+                    'keterangan' => $request->keterangan ?? "",
+                    'status' => 'Diajukan',
+                    'file_surat' => "",
+                    'created_at' => now()
+                ]);
+                
+                ApprovalSurat::create([
+                    'id_pengajuan' => $pengajuan->id,
+                    'id_pejabat_rt' => $warga->rt->id,
+                    'id_pejabat_rw' => $warga->rt->rw->id,
+                    'status_approval' => 'Pending_RT',
+                    'catatan' => null,
+                    'approved_at' => null
+                ]);
+                
+                DB::commit();
+            } catch (\Exception $e) {
+                DB::rollBack();
+                throw $e;
+            }
 
             return response()->json([
                 'message' => 'Pengajuan berhasil diajukan!',
@@ -112,13 +122,14 @@ class PengajuanSuratController extends Controller
             $warga = Warga::where('id_users', $user->id)->first();
             if (!$warga) return response()->json(['message' => 'Data warga tidak ditemukan'], 404);
 
-            $dataPengajuan = PengajuanSurat::with(['detailPemohon'])
+            $dataPengajuan = PengajuanSurat::with(['detailPemohon', 'approvalSurat'])
                 ->where('id_warga', $warga->id)
                 ->orderByDesc('created_at')
                 ->limit(2)
                 ->get();
 
             return response()->json([
+                'status' => 'success',
                 'pengajuan' => $dataPengajuan
             ]);
         } catch (\Exception $e) {
@@ -130,6 +141,7 @@ class PengajuanSuratController extends Controller
     {
         $pengajuanSurat = PengajuanSurat::with('approvalSurat')
             ->where('id_warga', $id_warga)
+            ->orderByDesc('created_at')
             ->get();
 
         $result = $pengajuanSurat->map(function ($pengajuan) {
@@ -140,19 +152,19 @@ class PengajuanSuratController extends Controller
                 $progress[] = [
                     'title' => 'Pengajuan sedang diproses',
                     'description' => 'Menunggu verifikasi RT',
-                    'status' => $approval->status_approval === 'Pending_RT' ? 'in-progress' : 'approved',
+                    'status' => ($approval->status_approval === 'Diajukan' ? 'in-progress' : 'approved'),
                 ];
 
                 $progress[] = [
                     'title' => 'Verifikasi RT',
                     'description' => $approval->status_approval === 'Disetujui_RT' ? 'Pengajuan telah disetujui oleh RT' : ($approval->status_approval === 'Ditolak_RT' ? 'Pengajuan ditolak oleh RT' : 'RT sedang memverifikasi pengajuan'),
-                    'status' => $approval->status_approval === 'Disetujui_RT' ? 'approved' : ($approval->status_approval === 'Ditolak_RT' ? 'rejected' : 'pending'),
+                    'status' => $approval->status_approval === 'Disetujui_RT' || $approval->status_approval === 'Disetujui_RW' || $approval->status_approval === 'Selesai' ? 'approved' : ($approval->status_approval === 'Ditolak_RT' ? 'rejected' : ($approval->status_approval === 'Pending_RT' ? 'in-progress' : 'pending')),
                 ];
 
                 $progress[] = [
                     'title' => 'Verifikasi RW',
                     'description' => $approval->status_approval === 'Disetujui_RW' ? 'Pengajuan telah disetujui oleh RW' : ($approval->status_approval === 'Ditolak_RW' ? 'Pengajuan ditolak oleh RW' : 'RW sedang memverifikasi pengajuan'),
-                    'status' => $approval->status_approval === 'Disetujui_RW' ? 'approved' : ($approval->status_approval === 'Ditolak_RW' ? 'rejected' : 'pending'),
+                    'status' => $approval->status_approval === 'Disetujui_RW' || $approval->status_approval === 'Selesai' ? 'approved' : ($approval->status_approval === 'Ditolak_RW' ? 'rejected' : ($approval->status_approval === 'Pending_RW' || $approval->status_approval === 'Disetujui_RT' ? 'in-progress' : 'pending')),
                 ];
 
                 $progress[] = [

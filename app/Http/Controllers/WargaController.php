@@ -26,14 +26,13 @@ class WargaController extends Controller
                 if ($pejabatRW) {
                     $warga = Warga::find($pejabatRW->id_warga);
                     $user = $warga ? User::find($warga->id_users) : null;
-                    $rw->pejabat = [
-                        'nama' => $warga->nama ?? null,
-                        'email' => $user->email ?? null,
-                        'periode' => $pejabatRW->periode,
-                        'ttd' => $pejabatRW->ttd,
+                    $rw->data = [
+                        'warga' => $warga ?? null,
+                        'user' => $user ?? null,
+                        'pejabat' => $pejabatRW ?? null,
                     ];
                 } else {
-                    $rw->pejabat = null;
+                    $rw->data = null;
                 }
                 return $rw;
             });
@@ -44,14 +43,13 @@ class WargaController extends Controller
                 if ($pejabatRT) {
                     $warga = Warga::find($pejabatRT->id_warga);
                     $user = $warga ? User::find($warga->id_users) : null;
-                    $rt->pejabat = [
-                        'nama' => $warga->nama ?? null,
-                        'email' => $user->email ?? null,
-                        'periode' => $pejabatRT->periode,
-                        'ttd' => $pejabatRT->ttd,
+                    $rt->data = [
+                        'warga' => $warga ?? null,
+                        'user' => $user ?? null,
+                        'pejabat' => $pejabatRT ?? null,
                     ];
                 } else {
-                    $rt->pejabat = null;
+                    $rt->data = null;
                 }
                 $rt->rw = RW::find($rt->id_rw); // juga ambil data RW terkait
                 return $rt;
@@ -86,7 +84,7 @@ class WargaController extends Controller
             // Misal warga dengan status aktif/nonaktif? 
             // Di struktur tidak ada approved, mungkin diganti dengan 'status' di user
             $dataWarga = Warga::whereHas('user', function ($query) {
-                $query->where('status', 'NonAktif');
+                $query->where('status_akun', 0);
             })->with(['alamat', 'user'])->get()->map(function ($warga) {
                 $warga->email = $warga->user->email ?? null;
                 $warga->alamat = $warga->alamat->alamat ?? null;
@@ -113,8 +111,8 @@ class WargaController extends Controller
             $countWarga = User::where('role', 'Warga')->count();
             $countPejabat = User::whereIn('role', ['PejabatRT', 'PejabatRW'])->count();
             $countPengajuan = PengajuanSurat::count();
-            $countPending = PengajuanSurat::where('status', 'Diajukan')->count();
-            $countSelesai = PengajuanSurat::where('status', '!=', 'Diajukan')->count();
+            $countPending = PengajuanSurat::where('status', 'Diproses_RW')->count();
+            $countSelesai = PengajuanSurat::where('status', '!=', 'Diproses_RW')->count();
 
             return response()->json([
                 'CountWarga' => $countWarga,

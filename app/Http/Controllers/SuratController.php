@@ -6,45 +6,86 @@ use Illuminate\Http\Request;
 use App\Models\ApprovalSurat;
 use App\Models\PengajuanSurat;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class SuratController extends Controller
 {
      // 1. Menampilkan pengajuan surat yang masih pending untuk RT tertentu
-    public function getPendingSuratRT($id_rt)
+    public function getPendingSuratRT(Request $request, $id_rt)
     {
-        $surat = PengajuanSurat::with(['warga', 'approval'])
+        $surat = PengajuanSurat::with(['warga', 'approvalSurat', 'rt', 'rw', 'detailPemohon'])
             ->whereHas('warga', function ($q) use ($id_rt) {
                 $q->where('id_rt', $id_rt);
             })
-            ->whereHas('approval', function ($q) {
-                $q->where(function ($query) {
-                    $query->whereNull('status_approval')
-                          ->orWhere('status_approval', 'Pending');
-                });
-            })
-            ->get();
+            ->orderByDesc('created_at');
+
+        if($request->filled('all')){  
+            if ($request->all == true) {
+                $surat = $surat->get();
+
+                return response()->json([
+                    'status' => 'success',
+                    'data' => $surat,
+                ]);
+            }
+        }
+        
+        if($request->filled('limit')){
+            $surat = $surat->limit($request->limit);
+            $surat = $surat->get();
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $surat,
+            ]);
+        }
+
+        $surat = $surat->whereHas("approvalSurat", function ($q) {
+            $q->where('status_approval', 'Pending_RT');
+        });
+
+        $surat = $surat->get();
 
         return response()->json([
             'status' => 'success',
-            'data' => $surat
+            'data' => $surat,
         ]);
     }
 
     // 2. Menampilkan pengajuan surat untuk RW yang sudah disetujui RT
-    public function getPendingSuratRW($id_rw)
+    public function getPendingSuratRW(Request $request, $id_rw)
     {
-        $surat = PengajuanSurat::with(['warga', 'approval'])
+        $surat = PengajuanSurat::with(['warga', 'approvalSurat', 'rt', 'rw', 'detailPemohon'])
             ->whereHas('warga.rt.rw', function ($q) use ($id_rw) {
                 $q->where('id', $id_rw);
             })
-            ->whereHas('approval', function ($q) {
-                $q->where('status_approval', 'Disetujui_RT');
-            })
-            ->get();
+            ->orderByDesc('created_at');
+
+            if($request->filled('all')){  
+                if ($request->all == true) {
+                    $surat = $surat->get();
+
+                    return response()->json([
+                        'status' => 'success',
+                        'data' => $surat,
+                    ]);
+                }
+            }
+
+            $surat = $surat->whereHas("approvalSurat", function ($q) {
+                $q->where('status_approval', 'Pending_RW')
+                  ->orWhere('status_approval', 'Disetujui_RT');
+            });
+
+            if($request->filled('limit')){
+                $surat = $surat->limit($request->limit);
+            }
+
+            $surat = $surat->get();
 
         return response()->json([
             'status' => 'success',
-            'data' => $surat
+            'data' => $surat,
         ]);
     }
 
@@ -54,8 +95,8 @@ class SuratController extends Controller
         $request->validate([
             'status_approval' => 'required|in:Disetujui_RT,Ditolak_RT,Disetujui_RW,Ditolak_RW,Selesai',
             'catatan' => 'nullable|string',
-            'id_pejabat_rt' => 'nullable|exists:pejabat__r_t,id',
-            'id_pejabat_rw' => 'nullable|exists:pejabat__r_w,id',
+            'id_pejabat_rt' => 'nullable|exists:pejabat_rt,id',
+            'id_pejabat_rw' => 'nullable|exists:pejabat_rw,id',
         ]);
 
         try {
@@ -105,7 +146,7 @@ class SuratController extends Controller
     // 4. Menampilkan semua pengajuan surat (opsional filter)
     public function getAllPengajuanSurat(Request $request)
     {
-        $query = PengajuanSurat::with(['warga.rt.rw', 'approval']);
+        $query = PengajuanSurat::with(['warga.rt.rw', 'approvalSurat']);
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);

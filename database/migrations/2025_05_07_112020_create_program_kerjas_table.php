@@ -16,7 +16,11 @@ return new class extends Migration
             $table->foreignId('id_rw')->constrained('rw')->onDelete('cascade');
             $table->string('nama_program_kerja');
             $table->string('tempat');
-            $table->date('tanggal');
+            $table->date('tanggal_mulai');
+            $table->date('tanggal_selesai')->nullable();
+            $table->time('waktu_mulai');
+            $table->time('waktu_selesai')->nullable();
+            $table->string('penanggung_jawab');
             $table->timestamps();
         });
     }

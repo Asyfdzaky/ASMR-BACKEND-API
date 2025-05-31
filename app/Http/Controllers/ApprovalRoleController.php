@@ -27,7 +27,6 @@ class ApprovalRoleController extends Controller
         }
     }
     public function ApproveWarga($id){
-        # error	"Call to undefined method Illuminate\\Database\\Eloquent\\Relations\\BelongsTo::save()"
         try{
             $Warga = Warga::find($id);
             $user = $Warga->user;

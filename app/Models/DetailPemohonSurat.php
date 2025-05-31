@@ -14,6 +14,7 @@ class DetailPemohonSurat extends Model
         'nama_pemohon',
         'nik_pemohon',
         'no_kk_pemohon',
+        'agama_pemohon',
         'alamat_pemohon',
         'phone_pemohon',
         'tempat_tanggal_lahir_pemohon',

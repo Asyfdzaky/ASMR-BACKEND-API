@@ -40,4 +40,9 @@ class PengajuanSurat extends Model
     {
         return $this->hasOne(ApprovalSurat::class, 'id_pengajuan');
     }
+
+    public function detailPemohon()
+    {
+        return $this->belongsTo(DetailPemohonSurat::class, 'id_detail_pemohon');
+    }
 }

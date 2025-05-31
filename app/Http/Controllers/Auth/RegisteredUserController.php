@@ -35,8 +35,9 @@ class RegisteredUserController extends Controller
             "nama" => "required|string",
             "nomer_kk" => "required|numeric",
             "nik" => "required|numeric",
-            "jenis_kelamin" => "required|in:laki-laki,perempuan",
+            "jenis_kelamin" => "required|in:Laki-Laki,Perempuan",
             "phone" => "required|numeric",
+            "agama" => "required|in:Islam,Kristen,Katolik,Hindu,Buddha,Khonghucu",
             "tempat_lahir" => "required|string",
             "tanggal_lahir" => "required|date",
             'id_rt' => 'required|exists:rt,id',
@@ -53,7 +54,7 @@ class RegisteredUserController extends Controller
         $user = User::create([
             "email" => $request->email,
             "password" => Hash::make($request->password),
-            "role" => "warga",
+            "role" => "Warga",
             "statusAkun" => false,
         ]);
         // Buat detail alamat
@@ -70,6 +71,7 @@ class RegisteredUserController extends Controller
             "nama" => $request->nama,
             "nomor_kk" => $request->nomer_kk,
             "nik" => $request->nik,
+            "agama" => $request->agama,
             "jenis_kelamin" => $request->jenis_kelamin,
             "phone" => $request->phone,
             "tempat_lahir" => $request->tempat_lahir,

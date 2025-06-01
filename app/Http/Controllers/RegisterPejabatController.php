@@ -25,7 +25,8 @@ class RegisterPejabatController extends Controller
             $baseRules = [
                 'id_rt' => 'required|exists:rt,id',
                 'id_rw' => 'required|exists:rw,id',
-                'periode' => 'required|string',
+                'periode_mulai' => 'required|string',
+                'periode_selesai' => 'required|string',
                 'role' => 'required|in:PejabatRT,PejabatRW',
                 'ttd' => 'required|file|mimes:png,jpg,jpeg|max:2048',
             ];
@@ -70,14 +71,16 @@ class RegisterPejabatController extends Controller
                     pejabatRT::create([
                         "id_rt" => $request->id_rt,
                         "id_warga" => $warga->id,
-                        "periode" => $request->periode,
+                        "periode_mulai" => $request->periode_mulai,
+                        "periode_selesai" => $request->periode_selesai,
                         "ttd" => $ttdUrl,
                     ]);
                 } elseif ($request->role == "PejabatRW") {
                     pejabatRW::create([
                         "id_rw" => $request->id_rw,
                         "id_warga" => $warga->id,
-                        "periode" => $request->periode,
+                        "periode_mulai" => $request->periode_mulai,
+                        "periode_selesai" => $request->periode_selesai,
                         "ttd" => $ttdUrl,
                     ]);
                 }
@@ -90,13 +93,14 @@ class RegisterPejabatController extends Controller
                         "warga" => $warga,
                         "ttd" => $ttdUrl,
                         "role" => $request->role,
-                        "periode" => $request->periode,
+                        "periode_mulai" => $request->periode_mulai,
+                        "periode_selesai" => $request->periode_selesai,
                         "id_rt" => $request->id_rt,
                         "id_rw" => $request->id_rw,
                     ],
                 ], 200);
 
-                
+
             } else {
                 // Scenario 2: Tambah warga baru dan menjadikan sebagai pejabat
                 $request->validate(array_merge($baseRules, [
@@ -152,14 +156,16 @@ class RegisterPejabatController extends Controller
                     pejabatRT::create([
                         "id_rt" => $request->id_rt,
                         "id_warga" => $warga->id,
-                        "periode" => $request->periode,
+                        "periode_mulai" => $request->periode_mulai,
+                        "periode_selesai" => $request->periode_selesai,
                         "ttd" => $ttdUrl,
                     ]);
                 } elseif ($request->role == "PejabatRW") {
                     pejabatRW::create([
                         "id_rw" => $request->id_rw,
                         "id_warga" => $warga->id,
-                        "periode" => $request->periode,
+                        "periode_mulai" => $request->periode_mulai,
+                        "periode_selesai" => $request->periode_selesai,
                         "ttd" => $ttdUrl,
                     ]);
                 }
@@ -174,7 +180,8 @@ class RegisterPejabatController extends Controller
                         "detailAlamat" => $detailAlamat,
                         "ttd" => $ttdUrl,
                         "role" => $request->role,
-                        "periode" => $request->periode,
+                        "periode_mulai" => $request->periode_mulai,
+                        "periode_selesai" => $request->periode_selesai,
                         "id_rt" => $request->id_rt,
                         "id_rw" => $request->id_rw,
                     ],
@@ -196,80 +203,83 @@ class RegisterPejabatController extends Controller
         }
     }
     
-    public function update(Request $request, $id)
-{
-    try {
-        DB::beginTransaction();
+//     public function update(Request $request, $id)
+// {
+//     try {
+//         DB::beginTransaction();
 
-        $request->validate([
-            "nama" => "sometimes|string",
-            "phone" => "sometimes|numeric",
-            "alamat" => "sometimes|string",
-            "kabupaten" => "sometimes|string",
-            "provinsi" => "sometimes|string",
-            'periode' => 'sometimes|string',
-            'ttd' => 'sometimes|file|mimes:png,jpg,jpeg|max:2048',
-        ]);
+//         $request->validate([
+//             "nama" => "sometimes|string",
+//             "phone" => "sometimes|numeric",
+//             "alamat" => "sometimes|string",
+//             "kabupaten" => "sometimes|string",
+//             "provinsi" => "sometimes|string",
+//             'periode_mulai' => 'sometimes|string',
+//             'periode_selesai' => 'sometimes|string',
+//             'ttd' => 'sometimes|file|mimes:png,jpg,jpeg|max:2048',
+//         ]);
 
-        // Find the warga record
-        $warga = Warga::findOrFail($id);
+//         // Find the warga record
+//         $warga = Warga::findOrFail($id);
         
-        // Update basic warga info
-        $warga->update($request->only([
-            'nama', 'phone'
-        ]));
+//         // Update basic warga info
+//         $warga->update($request->only([
+//             'nama', 'phone'
+//         ]));
 
-        // Update address if provided
-        if ($request->has('alamat') || $request->has('kabupaten') || $request->has('provinsi')) {
-            $warga->alamat()->update([
-                'alamat' => $request->alamat ?? $warga->alamat->alamat,
-                'kabupaten' => $request->kabupaten ?? $warga->alamat->kabupaten,
-                'provinsi' => $request->provinsi ?? $warga->alamat->provinsi
-            ]);
-        }
+//         // Update address if provided
+//         if ($request->has('alamat') || $request->has('kabupaten') || $request->has('provinsi')) {
+//             $warga->alamat()->update([
+//                 'alamat' => $request->alamat ?? $warga->alamat->alamat,
+//                 'kabupaten' => $request->kabupaten ?? $warga->alamat->kabupaten,
+//                 'provinsi' => $request->provinsi ?? $warga->alamat->provinsi
+//             ]);
+//         }
 
-        // Handle signature update
-        $ttdUrl = null;
-        if ($request->hasFile('ttd')) {
-            // Delete old signature if exists
-            if ($warga->pejabatRT || $warga->pejabatRW) {
-                $oldTtd = $warga->pejabatRT ? $warga->pejabatRT->ttd : $warga->pejabatRW->ttd;
-                Storage::delete(str_replace('/storage', 'public', $oldTtd));
-            }
+//         // Handle signature update
+//         $ttdUrl = null;
+//         if ($request->hasFile('ttd')) {
+//             // Delete old signature if exists
+//             if ($warga->pejabatRT || $warga->pejabatRW) {
+//                 $oldTtd = $warga->pejabatRT ? $warga->pejabatRT->ttd : $warga->pejabatRW->ttd;
+//                 Storage::delete(str_replace('/storage', 'public', $oldTtd));
+//             }
             
-            // Store new signature
-            $ttdPath = $request->file('ttd')->store('public/ttd');
-            $ttdUrl = Storage::url($ttdPath);
-        }
+//             // Store new signature
+//             $ttdPath = $request->file('ttd')->store('public/ttd');
+//             $ttdUrl = Storage::url($ttdPath);
+//         }
 
-        // Update pejabat data
-        if ($warga->pejabatRT) {
-            $warga->pejabatRT->update([
-                'periode' => $request->periode ?? $warga->pejabatRT->periode,
-                'ttd' => $ttdUrl ?? $warga->pejabatRT->ttd
-            ]);
-        } elseif ($warga->pejabatRW) {
-            $warga->pejabatRW->update([
-                'periode' => $request->periode ?? $warga->pejabatRW->periode,
-                'ttd' => $ttdUrl ?? $warga->pejabatRW->ttd
-            ]);
-        }
+//         // Update pejabat data
+//         if ($warga->pejabatRT) {
+//             $warga->pejabatRT->update([
+//                 'periode_mulai' => $request->periode_mulai ?? $warga->pejabatRT->periode_mulai,
+//                 'periode_selesai' => $request->periode_selesai ?? $warga->pejabatRT->periode_selesai,
+//                 'ttd' => $ttdUrl ?? $warga->pejabatRT->ttd
+//             ]);
+//         } elseif ($warga->pejabatRW) {
+//             $warga->pejabatRW->update([
+//                 'periode_mulai' => $request->periode_mulai ?? $warga->pejabatRW->periode_mulai,
+//                 'periode_selesai' => $request->periode_selesai ?? $warga->pejabatRW->periode_selesai,
+//                 'ttd' => $ttdUrl ?? $warga->pejabatRW->ttd
+//             ]);
+//         }
 
-        DB::commit();
+//         DB::commit();
 
-        return response()->json([
-            "message" => "Data pejabat berhasil diperbarui",
-            "data" => $warga->load(['user', 'alamat', 'pejabatRT', 'pejabatRW'])
-        ], 200);
+//         return response()->json([
+//             "message" => "Data pejabat berhasil diperbarui",
+//             "data" => $warga->load(['user', 'alamat', 'pejabatRT', 'pejabatRW'])
+//         ], 200);
 
-    } catch (\Exception $e) {
-        DB::rollBack();
-        return response()->json([
-            'error' => 'Gagal memperbarui data',
-            'message' => $e->getMessage()
-        ], 500);
-    }
-}
+//     } catch (\Exception $e) {
+//         DB::rollBack();
+//         return response()->json([
+//             'error' => 'Gagal memperbarui data',
+//             'message' => $e->getMessage()
+//         ], 500);
+//     }
+// }
 
 public function getWargaByNIK($nik)
 {
@@ -286,65 +296,198 @@ public function getWargaByNIK($nik)
     }
 }
 
-public function destroy($id, Request $request)
+
+public function updateRT(Request $request, $id)
 {
+    DB::beginTransaction();
     try {
-        DB::beginTransaction();
+        // Cari RT dan pejabat RT terkait
+        $rt = RT::findOrFail($id);
+        $pejabatRT = pejabatRT::where('id_rt', $id)->first();
 
-        // Allow deletion by either warga_id or user_id
-        $warga = $request->has('user_id') 
-            ? Warga::where('id_users', $request->user_id)->firstOrFail()
-            : Warga::findOrFail($id);
-
-        // Get related data before deletion
-        $user = $warga->user;
-        $pejabatData = $warga->pejabatRT ?: $warga->pejabatRW;
-        $role = $pejabatData ? ($warga->pejabatRT ? 'RT' : 'RW') : 'Warga';
-        
-        // 1. Delete signature file if exists
-        if ($pejabatData && $pejabatData->ttd) {
-            Storage::delete(str_replace('/storage', 'public', $pejabatData->ttd));
+        if (!$pejabatRT) {
+            DB::rollBack();
+            return response()->json(['error' => 'Pejabat RT not found for the given RT ID'], 404);
         }
 
-        // 2. Delete official position if exists
-        if ($pejabatData) {
-            $pejabatData->delete();
-        }
+        $warga = Warga::findOrFail($pejabatRT->id_warga);
+        $user = User::findOrFail($warga->id_users);
 
-        // 3. Delete address
-        if ($warga->alamat) {
-            $warga->alamat()->delete();
-        }
+        $request->validate([
+            'nama' => 'required|string',
+            'nama_rt' => 'required|string',
+            'email' => 'required|email|unique:users,email,'.$user->id,
+            'periode_mulai' => 'required|integer',
+            'periode_selesai' => 'required|integer',
+            'ttd' => 'nullable|file|mimes:png,jpg,jpeg|max:2048',
+        ]);
 
-        // 4. Delete warga record
-        $warga->delete();
+        // Update warga nama
+        $warga->nama = $request->nama;
+        $warga->save();
 
-        // 5. Delete user account (optional - can be made configurable)
-        $deleteUser = $request->input('delete_user', true);
-        if ($deleteUser) {
-            $user->delete();
+        // Update RT nama
+        $rt->nama_rt = $request->nama_rt;
+        $rt->save();
+
+        // Update user email
+        $user->email = $request->email;
+        $user->save();
+
+        // Update pejabat RT
+        $pejabatRT->periode_mulai = $request->periode_mulai;
+        $pejabatRT->periode_selesai = $request->periode_selesai;
+        if ($request->has('ttd')) {
+            if ($pejabatRT->ttd) {
+                Storage::delete(str_replace('/storage', 'public', $pejabatRT->ttd));
+            }
+            
+            $ttdPath = $request->file('ttd')->store('public/ttd');
+            $ttdUrl = Storage::url($ttdPath);
+            $pejabatRT->ttd = $ttdUrl;
         }
+        $pejabatRT->save();
 
         DB::commit();
-
+        return response()->json(['message' => 'RT berhasil diperbarui'], 200);
+    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        DB::rollBack();
         return response()->json([
-            "message" => "Data berhasil dihapus",
-            "deleted" => [
-                "role" => $role,
-                "warga_id" => $warga->id,
-                "user_id" => $user->id,
-                "user_deleted" => $deleteUser
-            ]
-        ], 200);
-
+            'error' => 'Data not found',
+            'message' => $e->getMessage()
+        ], 404);
     } catch (\Exception $e) {
         DB::rollBack();
         return response()->json([
-            'error' => 'Gagal menghapus data',
-            'message' => $e->getMessage()
+            'message' => 'Terjadi kesalahan saat update RT',
+            'error' => $e->getMessage(),
         ], 500);
     }
 }
 
+public function updateRW(Request $request, $id)
+{
+    DB::beginTransaction();
+    try {
+        $rw = RW::findOrFail($id);
+        $pejabatRW = pejabatRW::where('id_rw', $id)->firstOrFail();
+        $warga = Warga::findOrFail($pejabatRW->id_warga);
+        $user = User::findOrFail($warga->id_users);
 
+        $request->validate([
+            'nama' => 'required|string',
+            'nama_rw' => 'required|string',
+            'email' => 'required|email|unique:users,email,'.$user->id,
+            'periode_mulai' => 'required|integer',
+            'periode_selesai' => 'required|integer',
+            'ttd' => 'nullable|file|mimes:png,jpg,jpeg|max:2048',
+        ]);
+
+        // Update warga nama
+        $warga->nama = $request->nama;
+        $warga->save();
+
+        // Update RW nama
+        $rw->nama_rw = $request->nama_rw;
+        $rw->save();
+
+        // Update user email
+        $user->email = $request->email;
+        $user->save();
+
+        // Update pejabat RW
+        $pejabatRW->periode_mulai = $request->periode_mulai;
+        $pejabatRW->periode_selesai = $request->periode_selesai;
+        if ($request->has('ttd')) {
+            if ($pejabatRW->ttd) {
+                Storage::delete(str_replace('/storage', 'public', $pejabatRW->ttd));
+            }
+            
+            $ttdPath = $request->file('ttd')->store('public/ttd');
+            $ttdUrl = Storage::url($ttdPath);
+            $pejabatRW->ttd = $ttdUrl;
+        }
+        $pejabatRW->save();
+
+        DB::commit();
+        return response()->json(['message' => 'RW berhasil diperbarui'], 200);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json([
+            'message' => 'Terjadi kesalahan saat update RW',
+            'error' => $e->getMessage(),
+        ], 500);
+    }
+}
+
+public function deleteRT(Request $request, $id)
+{
+    DB::beginTransaction();
+    try {
+        $rt = RT::findOrFail($id);
+        $pejabatRT = pejabatRT::where('id_rt', $id)->first();
+
+        if (!$pejabatRT) {
+            DB::rollBack();
+            return response()->json(['error' => 'Pejabat RT not found for the given RT ID'], 404);
+        }
+        
+        $warga = Warga::findOrFail($pejabatRT->id_warga);
+        $user = User::findOrFail($warga->id_users);
+
+        // 1. Delete signature file if exists
+        if ($pejabatRT && $pejabatRT->ttd) {
+            Storage::delete(str_replace('/storage', 'public', $pejabatRT->ttd));
+        }
+
+        $pejabatRT->delete();
+        $user->role = 'Warga';
+        $user->save();
+
+        DB::commit();
+        return response()->json(['message' => 'RT berhasil dihapus'], 200);
+    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        DB::rollBack();
+        return response()->json([
+            'error' => 'Data not found',
+            'message' => $e->getMessage()
+        ], 404);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json([
+            'message' => 'Terjadi kesalahan saat menghapus RT',
+            'error' => $e->getMessage(),
+        ], 500);
+    }
+}
+
+public function deleteRW(Request $request, $id)
+{
+    DB::beginTransaction();
+    try {
+        $rw = RW::findOrFail($id);
+        $pejabatRW = pejabatRW::where('id_rw', $id)->firstOrFail();
+        $warga = Warga::findOrFail($pejabatRW->id_warga);
+        $user = User::findOrFail($warga->id_users);
+
+        // 1. Delete signature file if exists
+        if ($pejabatRW && $pejabatRW->ttd) {
+            Storage::delete(str_replace('/storage', 'public', $pejabatRW->ttd));
+        }
+
+        $pejabatRW->delete();
+        $user->role = 'Warga';
+        $user->save();
+
+        DB::commit();
+
+        return response()->json(['message' => 'RW berhasil dihapus'], 200);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json([
+            'message' => 'Terjadi kesalahan saat menghapus RW',
+            'error' => $e->getMessage(),
+        ], 500);
+    }
+}
 }

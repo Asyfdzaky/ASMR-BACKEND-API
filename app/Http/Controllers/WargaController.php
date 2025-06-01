@@ -12,6 +12,7 @@ use App\Models\DetailAlamat;
 use Illuminate\Http\Request;
 use App\Models\PengajuanSurat;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class WargaController extends Controller
 {
@@ -24,7 +25,7 @@ class WargaController extends Controller
                 // Cari Pejabat RW terkait (warga + user)
                 $pejabatRW = pejabatRW::where('id_rw', $rw->id)->first();
                 if ($pejabatRW) {
-                    $warga = Warga::find($pejabatRW->id_warga);
+                    $warga = Warga::with('alamat')->find($pejabatRW->id_warga);
                     $user = $warga ? User::find($warga->id_users) : null;
                     $rw->data = [
                         'warga' => $warga ?? null,
@@ -41,7 +42,7 @@ class WargaController extends Controller
             $dataRT = RT::all()->map(function ($rt) {
                 $pejabatRT = pejabatRT::where('id_rt', $rt->id)->first();
                 if ($pejabatRT) {
-                    $warga = Warga::find($pejabatRT->id_warga);
+                    $warga = Warga::with('alamat')->find($pejabatRT->id_warga);
                     $user = $warga ? User::find($warga->id_users) : null;
                     $rt->data = [
                         'warga' => $warga ?? null,
@@ -129,89 +130,49 @@ class WargaController extends Controller
         }
     }
 
-    public function updateRT(Request $request, $id)
+        
+    public function destroy($id, Request $request)
     {
-        DB::beginTransaction();
         try {
-            // Cari RT dan pejabat RT terkait
-            $rt = RT::findOrFail($id);
-            $pejabatRT = pejabatRT::where('id_rt', $id)->firstOrFail();
-            $warga = Warga::findOrFail($pejabatRT->id_warga);
-            $user = User::findOrFail($warga->id_users);
+            DB::beginTransaction();
 
-            $request->validate([
-                'nama_rt' => 'required|string',
-                'email' => 'required|email|unique:users,email,'.$user->id,
-                'periode' => 'required|string',
-                'ttd' => 'nullable|string',
-            ]);
+            // Allow deletion by either warga_id or user_id
+            $warga = $request->has('user_id') 
+                ? Warga::where('id_users', $request->user_id)->firstOrFail()
+                : Warga::findOrFail($id);
 
-            // Update RT nama
-            $rt->nama_rt = $request->nama_rt;
-            $rt->save();
-
-            // Update user email
-            $user->email = $request->email;
-            $user->save();
-
-            // Update pejabat RT
-            $pejabatRT->periode = $request->periode;
-            if ($request->has('ttd')) {
-                $pejabatRT->ttd = $request->ttd;
+            // Get related data before deletion
+            $user = $warga->user;
+            
+            // 1. Delete address
+            if ($warga->alamat) {
+                $warga->alamat()->delete();
             }
-            $pejabatRT->save();
+
+            // 2. Delete warga record
+            $warga->delete();
+
+            // 3. Delete user account
+            $user->delete();
 
             DB::commit();
-            return response()->json(['message' => 'RT berhasil diperbarui'], 200);
+
+            return response()->json([
+                "message" => "Data berhasil dihapus",
+                "deleted" => [
+                    "role" => $user->role,
+                    "warga_id" => $warga->id,
+                    "user_id" => $user->id,
+                ]
+            ], 200);
+
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
-                'message' => 'Terjadi kesalahan saat update RT',
-                'error' => $e->getMessage(),
+                'error' => 'Gagal menghapus data',
+                'message' => $e->getMessage()
             ], 500);
         }
-    }
-
-    public function updateRW(Request $request, $id)
-    {
-        DB::beginTransaction();
-        try {
-            $rw = RW::findOrFail($id);
-            $pejabatRW = pejabatRW::where('id_rw', $id)->firstOrFail();
-            $warga = Warga::findOrFail($pejabatRW->id_warga);
-            $user = User::findOrFail($warga->id_users);
-
-            $request->validate([
-                'nama_rw' => 'required|string',
-                'email' => 'required|email|unique:users,email,'.$user->id,
-                'periode' => 'required|string',
-                'ttd' => 'nullable|string',
-            ]);
-
-            // Update RW nama
-            $rw->nama_rw = $request->nama_rw;
-            $rw->save();
-
-            // Update user email
-            $user->email = $request->email;
-            $user->save();
-
-            // Update pejabat RW
-            $pejabatRW->periode = $request->periode;
-            if ($request->has('ttd')) {
-                $pejabatRW->ttd = $request->ttd;
-            }
-            $pejabatRW->save();
-
-            DB::commit();
-            return response()->json(['message' => 'RW berhasil diperbarui'], 200);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json([
-                'message' => 'Terjadi kesalahan saat update RW',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
-    }
+    }  
 }
 

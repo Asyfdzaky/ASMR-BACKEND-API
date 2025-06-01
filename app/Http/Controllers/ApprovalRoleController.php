@@ -12,7 +12,7 @@ class ApprovalRoleController extends Controller
         try{
             $Warga = Warga::with('rt.rw', 'user')
                         ->whereHas('user', function ($query) {
-                            $query->where('role', 'warga');
+                            $query->whereNot('role', 'admin');
                         })
                         ->get();  
             return response()->json([

@@ -15,7 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('id_rw')->constrained('rw')->onDelete('cascade');
             $table->foreignId('id_warga')->constrained('wargas')->onDelete('cascade');
-            $table->string('periode');
+            $table->integer('periode_mulai');
+            $table->integer('periode_selesai');
             $table->string('ttd');
             $table->timestamps();
         });

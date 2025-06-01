@@ -48,8 +48,9 @@ class PengajuanSuratController extends Controller
             'tempat_tanggal_lahir_pemohon' => 'required|string',
             'jenis_kelamin_pemohon' => 'required|in:Laki-Laki,Perempuan',
             // 'id_detailAlamat' => 'required|exists:detail_alasmat,id',
+            'agama_pemohon' => 'required|string',
             'jenis_surat' => 'required|string',
-            "alamat" => "required|string",
+            "alamat_pemohon" => "required|string",
             // "kabupaten" => "required|string",
             // "provinsi" => "required|string",
             'keterangan' => 'nullable|string',
@@ -70,7 +71,8 @@ class PengajuanSuratController extends Controller
                 // ]); 
                 $pemohon = DetailPemohonSurat::create([
                     'id_warga' => $warga->id,
-                    'alamat_pemohon' => $request->alamat,
+                    'alamat_pemohon' => $request->alamat_pemohon,
+                    'agama_pemohon' => $request->agama_pemohon,
                     'nama_pemohon' => $request->nama_pemohon,
                     'nik_pemohon' => $request->nik_pemohon,
                     'no_kk_pemohon' => $request->no_kk_pemohon,
@@ -95,7 +97,7 @@ class PengajuanSuratController extends Controller
                     'id_pengajuan' => $pengajuan->id,
                     'id_pejabat_rt' => $warga->rt->id,
                     'id_pejabat_rw' => $warga->rt->rw->id,
-                    'status_approval' => 'Pending_RT',
+                    'status_approval' => 'Pending',
                     'catatan' => null,
                     'approved_at' => null
                 ]);
@@ -158,13 +160,13 @@ class PengajuanSuratController extends Controller
                 $progress[] = [
                     'title' => 'Verifikasi RT',
                     'description' => $approval->status_approval === 'Disetujui_RT' ? 'Pengajuan telah disetujui oleh RT' : ($approval->status_approval === 'Ditolak_RT' ? 'Pengajuan ditolak oleh RT' : 'RT sedang memverifikasi pengajuan'),
-                    'status' => $approval->status_approval === 'Disetujui_RT' || $approval->status_approval === 'Disetujui_RW' || $approval->status_approval === 'Selesai' ? 'approved' : ($approval->status_approval === 'Ditolak_RT' ? 'rejected' : ($approval->status_approval === 'Pending_RT' ? 'in-progress' : 'pending')),
+                    'status' => $approval->status_approval === 'Disetujui_RT' || $approval->status_approval === 'Disetujui_RW' || $approval->status_approval === 'Selesai' ? 'approved' : ($approval->status_approval === 'Ditolak_RT' ? 'rejected' : ($approval->status_approval === 'Pending' ? 'in-progress' : 'pending')),
                 ];
 
                 $progress[] = [
                     'title' => 'Verifikasi RW',
-                    'description' => $approval->status_approval === 'Disetujui_RW' ? 'Pengajuan telah disetujui oleh RW' : ($approval->status_approval === 'Ditolak_RW' ? 'Pengajuan ditolak oleh RW' : 'RW sedang memverifikasi pengajuan'),
-                    'status' => $approval->status_approval === 'Disetujui_RW' || $approval->status_approval === 'Selesai' ? 'approved' : ($approval->status_approval === 'Ditolak_RW' ? 'rejected' : ($approval->status_approval === 'Pending_RW' || $approval->status_approval === 'Disetujui_RT' ? 'in-progress' : 'pending')),
+                        'description' => $approval->status_approval === 'Disetujui_RW' ? 'Pengajuan telah disetujui oleh RW' : ($approval->status_approval === 'Ditolak_RW' ? 'Pengajuan ditolak oleh RW' : 'RW sedang memverifikasi pengajuan'),
+                        'status' => $approval->status_approval === 'Disetujui_RW' || $approval->status_approval === 'Selesai' ? 'approved' : ($approval->status_approval === 'Ditolak_RW' ? 'rejected' : ($approval->status_approval === 'Disetujui_RT' ? 'in-progress' : 'pending')),
                 ];
 
                 $progress[] = [

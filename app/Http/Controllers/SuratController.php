@@ -41,7 +41,7 @@ class SuratController extends Controller
         }
 
         $surat = $surat->whereHas("approvalSurat", function ($q) {
-            $q->where('status_approval', 'Pending_RT');
+            $q->where('status_approval', 'Pending');
         });
 
         $surat = $surat->get();
@@ -73,8 +73,7 @@ class SuratController extends Controller
             }
 
             $surat = $surat->whereHas("approvalSurat", function ($q) {
-                $q->where('status_approval', 'Pending_RW')
-                  ->orWhere('status_approval', 'Disetujui_RT');
+                $q->where('status_approval', 'Disetujui_RT');
             });
 
             if($request->filled('limit')){

@@ -33,8 +33,10 @@ Route::prefix('wilayah')->group(function () {
 // -------------------------
 Route::middleware(['auth:sanctum','admin'])->prefix('pejabat')->group(function () {
     Route::post('/register', [RegisterPejabatController::class, 'store']);   // Registrasi pejabat
-    Route::put('/{id}', [RegisterPejabatController::class, 'update']);       // Update pejabat
-    Route::delete('/{id}', [RegisterPejabatController::class, 'destroy']);   // Hapus pejabat
+    Route::put('/rt/{id}', [RegisterPejabatController::class, 'updateRT']);       // Update RT
+    Route::put('/rw/{id}', [RegisterPejabatController::class, 'updateRW']);       // Update RW
+    Route::delete('/rw/{id}', [RegisterPejabatController::class, 'deleteRW']);   // Hapus RW
+    Route::delete('/rt/{id}', [RegisterPejabatController::class, 'deleteRT']);   // Hapus RT
     Route::get('/warga/{nik}', [RegisterPejabatController::class, 'getWargaByNIK']); // Get warga by NIK
 });
 
@@ -76,8 +78,7 @@ Route::middleware('auth:sanctum')->prefix('biodata')->group(function () {
     Route::get('/', [WargaController::class, 'index']);            // Get semua data RT, RW, Warga
     Route::get('/pending-warga', [WargaController::class, 'PendingWarga']); // Warga yang status non aktif
     Route::get('/count', [WargaController::class, 'CountData']);   // Count data summary
-    Route::put('/rt/{id}', [WargaController::class, 'updateRT']);  // Update RT dan pejabat RT
-    Route::put('/rw/{id}', [WargaController::class, 'updateRW']);  // Update RW dan pejabat RW
+    Route::delete('/{id}', [WargaController::class, 'destroy']);  // Hapus warga
 });
 
 // -------------------------

@@ -9,7 +9,7 @@ class pejabatRW extends Model
 {
     use HasFactory;
     protected $table = 'pejabat_rw';
-    protected $fillable = ['id_rw', 'id_warga','nama_pejabat_rw','periode','ttd'];
+    protected $fillable = ['id_rw', 'id_warga','nama_pejabat_rw','periode_mulai','periode_selesai','ttd'];
 
     public function rw()
     {

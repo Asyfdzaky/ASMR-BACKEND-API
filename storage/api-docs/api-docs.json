@@ -377,9 +377,494 @@
                     }
                 }
             }
+        },
+        "/api/profile": {
+            "get": {
+                "tags": [
+                    "User Profile"
+                ],
+                "summary": "Get authenticated user's complete profile",
+                "description": "Retrieves the detailed profile information for the currently authenticated user, including their associated resident (Warga) and address (DetailAlamat) data.",
+                "operationId": "getAuthenticatedUserProfile",
+                "responses": {
+                    "200": {
+                        "description": "Successfully retrieved profile data",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Profil berhasil diambil."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "user": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "email": {
+                                                            "type": "string",
+                                                            "format": "email",
+                                                            "example": "user@example.com"
+                                                        },
+                                                        "role": {
+                                                            "type": "string",
+                                                            "example": "Warga"
+                                                        },
+                                                        "status_akun": {
+                                                            "type": "boolean",
+                                                            "example": true
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "warga": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "nama": {
+                                                            "type": "string",
+                                                            "example": "Nama Lengkap Warga"
+                                                        },
+                                                        "nomor_kk": {
+                                                            "type": "string",
+                                                            "example": "1234567890123456"
+                                                        },
+                                                        "nik": {
+                                                            "type": "string",
+                                                            "example": "1234567890123456"
+                                                        },
+                                                        "jenis_kelamin": {
+                                                            "type": "string",
+                                                            "enum": [
+                                                                "Laki-Laki",
+                                                                "Perempuan"
+                                                            ],
+                                                            "example": "Laki-Laki"
+                                                        },
+                                                        "phone": {
+                                                            "type": "string",
+                                                            "example": "081234567890"
+                                                        },
+                                                        "tempat_lahir": {
+                                                            "type": "string",
+                                                            "example": "Jakarta"
+                                                        },
+                                                        "tanggal_lahir": {
+                                                            "type": "string",
+                                                            "format": "date",
+                                                            "example": "1990-01-01"
+                                                        },
+                                                        "id_users": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "id_alamat": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "id_rt": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "created_at": {
+                                                            "type": "string",
+                                                            "format": "date-time"
+                                                        },
+                                                        "updated_at": {
+                                                            "type": "string",
+                                                            "format": "date-time"
+                                                        },
+                                                        "rt": {
+                                                            "description": "RT details",
+                                                            "type": "object"
+                                                        },
+                                                        "alamat": {
+                                                            "description": "Address details",
+                                                            "type": "object"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Warga data not found for the authenticated user",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Data warga tidak ditemukan."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Terjadi kesalahan saat mengambil profil."
+                                        },
+                                        "error": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "User Profile"
+                ],
+                "summary": "Update authenticated user's profile details",
+                "description": "Updates the profile information for the currently authenticated user. Fields like email, name, phone, gender, and address details can be updated. NIK, Nomor KK, Tempat Lahir, Tanggal Lahir cannot be updated via this endpoint.",
+                "operationId": "updateAuthenticatedUserProfile",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "email": {
+                                        "description": "New email address (optional). Must be unique.",
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "new.email@example.com",
+                                        "nullable": true
+                                    },
+                                    "nama": {
+                                        "description": "New full name (optional)",
+                                        "type": "string",
+                                        "example": "Nama Lengkap Baru",
+                                        "nullable": true
+                                    },
+                                    "jenis_kelamin": {
+                                        "description": "Gender (optional)",
+                                        "type": "string",
+                                        "enum": [
+                                            "Laki-Laki",
+                                            "Perempuan"
+                                        ],
+                                        "example": "Perempuan",
+                                        "nullable": true
+                                    },
+                                    "phone": {
+                                        "description": "New phone number (optional)",
+                                        "type": "string",
+                                        "example": "081234567899",
+                                        "nullable": true
+                                    },
+                                    "alamat": {
+                                        "description": "New street address (optional)",
+                                        "type": "string",
+                                        "example": "Jl. Contoh Baru No. 10",
+                                        "nullable": true
+                                    },
+                                    "kabupaten": {
+                                        "description": "New regency/city (optional)",
+                                        "type": "string",
+                                        "example": "Kabupaten Baru",
+                                        "nullable": true
+                                    },
+                                    "provinsi": {
+                                        "description": "New province (optional)",
+                                        "type": "string",
+                                        "example": "Provinsi Baru",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Profile updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Profil berhasil diperbarui."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "user": {
+                                                    "description": "Updated User data",
+                                                    "type": "object"
+                                                },
+                                                "warga": {
+                                                    "description": "Updated Warga data",
+                                                    "type": "object"
+                                                },
+                                                "alamat": {
+                                                    "description": "Updated Address data",
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error (e.g., duplicate email, invalid gender)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        },
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Warga data not found for the authenticated user or associated address not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Data warga tidak ditemukan."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Terjadi kesalahan saat memperbarui profil."
+                                        },
+                                        "error": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/profile/password": {
+            "put": {
+                "tags": [
+                    "User Profile"
+                ],
+                "summary": "Update authenticated user's password",
+                "description": "Allows the authenticated user to change their password by providing the current password and a new password. The new password must be confirmed.",
+                "operationId": "updateUserPassword",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "current_password",
+                                    "new_password",
+                                    "new_password_confirmation"
+                                ],
+                                "properties": {
+                                    "current_password": {
+                                        "description": "Current password of the user",
+                                        "type": "string",
+                                        "format": "password",
+                                        "minLength": 8,
+                                        "example": "old_password"
+                                    },
+                                    "new_password": {
+                                        "description": "New password for the user",
+                                        "type": "string",
+                                        "format": "password",
+                                        "minLength": 8,
+                                        "example": "new_secure_password123"
+                                    },
+                                    "new_password_confirmation": {
+                                        "description": "Confirmation of the new password. Must match 'new_password'.",
+                                        "type": "string",
+                                        "format": "password",
+                                        "minLength": 8,
+                                        "example": "new_secure_password123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Password updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Kata sandi berhasil diperbarui."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
         }
     },
     "components": {
+        "responses": {
+            "401": {
+                "description": "Unauthenticated / Current password mismatch",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "properties": {
+                                "message": {
+                                    "type": "string",
+                                    "example": "Kata sandi saat ini salah."
+                                }
+                            },
+                            "type": "object"
+                        }
+                    }
+                }
+            },
+            "422": {
+                "description": "Validation error (e.g., new password too short, confirmation mismatch)",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "properties": {
+                                "message": {
+                                    "type": "string",
+                                    "example": "The given data was invalid."
+                                },
+                                "errors": {
+                                    "type": "object"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    }
+                }
+            },
+            "500": {
+                "description": "Server error",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "properties": {
+                                "message": {
+                                    "type": "string",
+                                    "example": "Terjadi kesalahan saat memperbarui kata sandi."
+                                },
+                                "error": {
+                                    "type": "string"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
         "securitySchemes": {
             "bearerAuth": {
                 "type": "http",
@@ -394,6 +879,10 @@
         {
             "name": "Authentication",
             "description": "Authentication"
+        },
+        {
+            "name": "User Profile",
+            "description": "User Profile"
         }
     ]
 }

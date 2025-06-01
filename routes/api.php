@@ -100,6 +100,14 @@ Route::middleware('auth:sanctum')->prefix('proker')->group(function(){
     Route::delete('/{id}',[programKerjaController::class, 'destroy']); // Hapus program kerja
 });
 // -------------------------
+// USER PROFILE MANAGEMENT
+// -------------------------
+Route::middleware('auth:sanctum')->prefix('profile')->group(function () {
+    Route::get('/', [\App\Http\Controllers\ProfileController::class, 'show']); // Mengambil profil lengkap
+    Route::put('/', [\App\Http\Controllers\ProfileController::class, 'update']); // Memperbarui detail profil (email, nama, dll.)
+    Route::put('/password', [\App\Http\Controllers\ProfileController::class, 'updatePassword']); // Memperbarui kata sandi
+});
+// -------------------------
 // AUTH (Bawaan Laravel Breeze / Sanctum)
 // -------------------------
 require __DIR__.'/auth.php';

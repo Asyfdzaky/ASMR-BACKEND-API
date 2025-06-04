@@ -12,25 +12,39 @@ class DiagramController extends Controller
     public function jumlahPengajuanPerBulan(Request $request)
     {
         $year = $request->input('year', date('Y'));
+        $monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-        // Ambil data jumlah pengajuan per bulan di tahun tertentu
+        $result = [];
+        for ($m = 0; $m < 12; $m++) {
+            $result[] = [
+                'name' => $monthNames[$m],
+                'diterima' => 0,
+                'ditolak' => 0,
+            ];
+        }
+
+        // Ambil data jumlah pengajuan per bulan dan status di tahun tertentu
         $data = PengajuanSurat::select(
                     DB::raw('MONTH(created_at) as bulan'),
-                    DB::raw('COUNT(*) as total')
+                    'status',
+                    DB::raw('COUNT(*) as total_status')
                 )
                 ->whereYear('created_at', $year)
-                ->groupBy(DB::raw('MONTH(created_at)'))
+                ->whereIn('status', ['Disetujui', 'Selesai', 'Ditolak'])
+                ->groupBy(DB::raw('MONTH(created_at)'), 'status')
                 ->orderBy('bulan')
                 ->get();
 
-        // Format hasil agar bulan yang kosong tetap muncul (opsional)
-        $result = [];
-        for ($m = 1; $m <= 12; $m++) {
-            $found = $data->firstWhere('bulan', $m);
-            $result[] = [
-                'bulan' => $m,
-                'total' => $found ? $found->total : 0,
-            ];
+        foreach ($data as $item) {
+            $monthIndex = $item->bulan - 1;
+
+            if ($monthIndex >= 0 && $monthIndex < 12) {
+                if (in_array($item->status, ['Disetujui', 'Selesai'])) {
+                    $result[$monthIndex]['diterima'] += $item->total_status;
+                } elseif ($item->status == 'Ditolak') {
+                    $result[$monthIndex]['ditolak'] += $item->total_status;
+                }
+            }
         }
 
         return response()->json($result);

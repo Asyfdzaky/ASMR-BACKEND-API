@@ -8,6 +8,7 @@ use App\Models\ApprovalSurat;
 use App\Models\DetailAlamat;
 use App\Models\PengajuanSurat;
 use App\Models\DetailPemohonSurat;
+use App\Models\Notifikasi;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -101,6 +102,23 @@ class PengajuanSuratController extends Controller
                     'catatan' => null,
                     'approved_at' => null
                 ]);
+                
+                Notifikasi::create([
+                        'id_user' => $pengajuan->warga->id_users,
+                        'id_pengajuan_surat' => $pengajuan->id,
+                        'jenis_notif' => 'surat',
+                        'pesan' => 'Pengajuan surat baru telah ' + $pengajuan->status + '.',
+                    ]);
+                
+                // Notifikasi untuk pejabat RT
+                if ($warga->rt) {
+                    Notifikasi::create([
+                        'id_user' => $warga->rt->pejabatRT->id_users,
+                        'id_pengajuan_surat' => $pengajuan->id,
+                        'jenis_notif' => 'surat',
+                        'pesan' => 'Pengajuan surat baru telah diajukan oleh warga.',
+                    ]);
+                }
                 
                 DB::commit();
             } catch (\Exception $e) {

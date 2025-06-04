@@ -13,6 +13,7 @@ use Illuminate\Validation\Rules;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
+use App\Models\Notifikasi;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Auth\Events\Registered;
@@ -165,6 +166,15 @@ class RegisteredUserController extends Controller
             "tempat_lahir" => $request->tempat_lahir,
             "tanggal_lahir" => $request->tanggal_lahir,
         ]);
+
+        // Buat notifikasi untuk admin
+        $admin = User::where('role', 'Admin')->first();
+        Notifikasi::create([
+            'id_user' => $admin->id,
+            'jenis_notif' => 'surat',
+            'pesan' => 'Pengajuan registrasi warga baru: ' . $warga->nama . ' (NIK: ' . $warga->nik . ') telah dibuat. Silakan cek dan aktifkan akun.',
+        ]);
+
         // Commit transaksi jika semua berhasil
         DB::commit();
         event(new Registered($user));

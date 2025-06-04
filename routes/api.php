@@ -7,7 +7,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SuratController;
 use App\Http\Controllers\WargaController;
 use App\Http\Controllers\DiagramController;
+use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\PengajuanSuratController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\suratPDFController;
 use App\Http\Controllers\programKerjaController;
 use App\Http\Controllers\RegisterPejabatController;
@@ -99,14 +101,24 @@ Route::middleware('auth:sanctum')->prefix('proker')->group(function(){
     Route::put('/{id}',[programKerjaController::class, 'update']); // Update program kerja
     Route::delete('/{id}',[programKerjaController::class, 'destroy']); // Hapus program kerja
 });
+
 // -------------------------
 // USER PROFILE MANAGEMENT
 // -------------------------
 Route::middleware('auth:sanctum')->prefix('profile')->group(function () {
-    Route::get('/', [\App\Http\Controllers\ProfileController::class, 'show']); // Mengambil profil lengkap
-    Route::put('/', [\App\Http\Controllers\ProfileController::class, 'update']); // Memperbarui detail profil (email, nama, dll.)
-    Route::put('/password', [\App\Http\Controllers\ProfileController::class, 'updatePassword']); // Memperbarui kata sandi
+    Route::get('/', [ProfileController::class, 'show']); // Mengambil profil lengkap
+    Route::put('/', [ProfileController::class, 'update']); // Memperbarui detail profil (email, nama, dll.)
+    Route::put('/password', [ProfileController::class, 'updatePassword']); // Memperbarui kata sandi
 });
+
+// -------------------------
+// Notifikasi
+// -------------------------
+Route::prefix('notifications')->prefix('notifications')->group(function () {
+    Route::get('/count', [NotifikasiController::class, 'getNotificationCounts']);
+    Route::delete('/clear', [NotifikasiController::class, 'clearNotification']);
+});
+
 // -------------------------
 // AUTH (Bawaan Laravel Breeze / Sanctum)
 // -------------------------

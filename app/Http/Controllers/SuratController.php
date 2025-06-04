@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\ApprovalSurat;
+use App\Models\Notifikasi;
 use App\Models\PengajuanSurat;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -127,6 +128,29 @@ class SuratController extends Controller
             };
             $pengajuan->save();
 
+            // Notifikasi Warga
+            if (Notifikasi::where('id_pengajuan_surat', $pengajuan->id)->andWhere('id_user', $approval->pengajuanSurat->warga->id_users)->notExist()) {
+                Notifikasi::create([
+                        'id_user' => $approval->pengajuanSurat->warga->id_users,
+                        'id_pengajuan_surat' => $pengajuan->id,
+                        'jenis_notif' => 'surat',
+                        'pesan' => 'Pengajuan surat baru telah ' + $pengajuan->status + '.',
+                    ]);
+            } else {
+                Notifikasi::where('id_pengajuan_surat', $pengajuan->id)
+                    ->update(['pesan' => 'Pengajuan surat telah ' . $pengajuan->status . '.']);
+            }
+
+            // Notifikasi Pejabat RW
+            if ($request->status_approval === 'Disetujui_RT') {
+                Notifikasi::create([
+                    'id_user' => $approval->pejabatRw->warga->id_users,
+                    'id_pengajuan_surat' => $pengajuan->id,
+                    'jenis_notif' => 'surat',
+                    'pesan' => 'Pengajuan surat baru telah ' . $pengajuan->status . '.',
+                ]);
+            }
+            
             DB::commit();
 
             return response()->json([

@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Models\pejabatRT;
+use App\Models\pejabatRW;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use App\Models\PengajuanSurat;
@@ -34,6 +36,9 @@ class SuratService
         };
 
         $template = TemplateSurat::where('jenis_surat', $jenis_surat)->firstOrFail();
+        $detail_pemohon = $pengajuan->detailPemohon;
+        $pejabat_rt = pejabatRT::where('id_rt', $warga->rt->id)->firstOrFail();
+        $pejabat_rw = pejabatRW::where('id_rw', $warga->rt->rw->id)->firstOrFail();
 
         $content = $this->replacePlaceholders($template->template_html, [
             'JENIS_SURAT' => $pengajuan->jenis_surat,
@@ -41,19 +46,19 @@ class SuratService
             'KECAMATAN' => "Depok",
             'KELURAHAN' => "Bulaksumur",
             'ALAMAT_KANTOR' => "Bulaksumur, Depok, Sleman Regency, Special Region of Yogyakarta 55281",
-            'ID_RT' => $rt->getNoRT(),
-            'ID_RW' => $rw->getNoRW(),
-            'NAMA_WARGA' => $warga->nama,
-            'NOMOR_KK' => $warga->nomer_kk,
-            'NIK_WARGA' => $warga->nik,
-            'ALAMAT_WARGA' => $warga->alamat,
-            'TEMPAT_TGL_LAHIR' => $warga->tempat_lahir . ', ' . Carbon::parse($warga->tanggal_lahir)->translatedFormat('d F Y'),
-            'JENIS_KELAMIN' => $warga->jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan',
-            'AGAMA' => $warga->agama,
+            'ID_RT' => $rt->nama_rt,
+            'ID_RW' => $rw->nama_rw,
+            'NAMA_WARGA' => $detail_pemohon->nama_pemohon,
+            'NOMOR_KK' => $detail_pemohon->no_kk_pemohon,
+            'NIK_WARGA' => $detail_pemohon->nik_pemohon,
+            'ALAMAT_WARGA' => $detail_pemohon->alamat_pemohon,
+            'TEMPAT_TGL_LAHIR' => $detail_pemohon->tempat_tanggal_lahir_pemohon,
+            'JENIS_KELAMIN' => $detail_pemohon->jenis_kelamin_pemohon,
+            'AGAMA' => $detail_pemohon->agama_pemohon,
             'NO_SURAT' => $this->generateNomorSurat($pengajuan),
             'TANGGAL_SURAT' => Carbon::now()->translatedFormat('d F Y'),
-            'NAMA_RT' => $rt->nama,
-            'NAMA_RW' => $rw->nama,
+            'NAMA_RT' => $pejabat_rt->warga->nama,
+            'NAMA_RW' => $pejabat_rw->warga->nama,
             'TTD_RT' => $ttd_rt_path,
             'TTD_RW' => $ttd_rw_path
         ]);

@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Warga;
 use Illuminate\Http\Request;
 use App\Models\ApprovalSurat;
-use App\Models\DetailAlamat;
 use App\Models\PengajuanSurat;
 use App\Models\DetailPemohonSurat;
 use App\Models\Notifikasi;
@@ -96,8 +95,8 @@ class PengajuanSuratController extends Controller
                 
                 ApprovalSurat::create([
                     'id_pengajuan' => $pengajuan->id,
-                    'id_pejabat_rt' => $warga->rt->id,
-                    'id_pejabat_rw' => $warga->rt->rw->id,
+                    'id_rt' => $warga->rt->id,
+                    'id_rw' => $warga->rt->rw->id,
                     'status_approval' => 'Pending',
                     'catatan' => null,
                     'approved_at' => null
@@ -107,17 +106,26 @@ class PengajuanSuratController extends Controller
                         'id_user' => $pengajuan->warga->id_users,
                         'id_pengajuan_surat' => $pengajuan->id,
                         'jenis_notif' => 'surat',
-                        'pesan' => 'Pengajuan surat baru telah ' + $pengajuan->status + '.',
+                        'pesan' => 'Pengajuan surat baru telah ' . $pengajuan->status . '.',
                     ]);
                 
                 // Notifikasi untuk pejabat RT
                 if ($warga->rt) {
-                    Notifikasi::create([
-                        'id_user' => $warga->rt->pejabatRT->id_users,
-                        'id_pengajuan_surat' => $pengajuan->id,
-                        'jenis_notif' => 'surat',
-                        'pesan' => 'Pengajuan surat baru telah diajukan oleh warga.',
-                    ]);
+                    $pejabatRTModels = $warga->rt->pejabatRT;
+                    if ($pejabatRTModels->isNotEmpty()) {
+                        $pejabatRT = $pejabatRTModels->first(); 
+                        if ($pejabatRT && $pejabatRT->warga) {
+                             $idUserPejabat = $pejabatRT->warga->id_users;
+                             if ($idUserPejabat) { 
+                                Notifikasi::create([
+                                    'id_user' => $idUserPejabat,
+                                    'id_pengajuan_surat' => $pengajuan->id,
+                                    'jenis_notif' => 'surat',
+                                    'pesan' => 'Pengajuan surat baru telah diajukan oleh warga.',
+                                ]);
+                            }
+                        }
+                    }
                 }
                 
                 DB::commit();

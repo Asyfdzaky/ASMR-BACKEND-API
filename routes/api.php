@@ -28,13 +28,20 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::prefix('wilayah')->group(function () {
     Route::get('/rw', [GetRtRW::class, 'GetRW']);           // List semua RW
     Route::get('/rt/{id_rw}', [GetRtRW::class, 'GetRT']);   // List RT berdasarkan RW
+    Route::get('/all-rt', [GetRtRW::class, 'getAllRTs']); // List semua RT dengan detail
+    Route::get('/rt/{id_rt_entity}/warga', [GetRtRW::class, 'getWargaByRT']); // List warga by RT ID
+    Route::get('/rw/{id_rw_entity}/warga', [GetRtRW::class, 'getWargaByRW']); // List warga by RW ID (scope)
 });
 
 // -------------------------
 // PEJABAT RT-RW (ADMIN ONLY)
 // -------------------------
 Route::middleware(['auth:sanctum','admin'])->prefix('pejabat')->group(function () {
+    Route::post('/jabatan/rt', [RegisterPejabatController::class, 'storeJabatanRT']);   // Buat jabatan RT
+    Route::post('/jabatan/rw', [RegisterPejabatController::class, 'storeJabatanRW']);   // Buat jabatan RW
     Route::post('/register', [RegisterPejabatController::class, 'store']);   // Registrasi pejabat
+    Route::get('/rt/{id_rt_entity}/details', [RegisterPejabatController::class, 'getRTDetails']); // Get details RT
+    Route::get('/rw/{id_rw_entity}/details', [RegisterPejabatController::class, 'getRWDetails']); // Get details RW
     Route::put('/rt/{id}', [RegisterPejabatController::class, 'updateRT']);       // Update RT
     Route::put('/rw/{id}', [RegisterPejabatController::class, 'updateRW']);       // Update RW
     Route::delete('/rw/{id}', [RegisterPejabatController::class, 'deleteRW']);   // Hapus RW

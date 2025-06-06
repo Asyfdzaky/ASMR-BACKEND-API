@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon;
 
 class pejabatRT extends Model
 {
@@ -14,6 +15,11 @@ class pejabatRT extends Model
     public function rt()
     {
         return $this->belongsTo(RT::class, 'id_rt');
+    }
+
+    public function warga()
+    {
+        return $this->belongsTo(Warga::class, 'id_warga');
     }
 
     public function approvalSurat()

@@ -23,8 +23,8 @@ class RegisterPejabatController extends Controller
             DB::beginTransaction();
 
             $baseRules = [
-                'id_rt' => 'required|exists:rt,id',
-                'id_rw' => 'required|exists:rw,id',
+                'id_rt' => 'nullable|exists:rt,id',
+                'id_rw' => 'nullable|exists:rw,id',
                 'periode_mulai' => 'required|string',
                 'periode_selesai' => 'required|string',
                 'role' => 'required|in:PejabatRT,PejabatRW',
@@ -32,7 +32,6 @@ class RegisterPejabatController extends Controller
             ];
 
             if ($request->has('id_warga')) {
-                // Scenario 1: Tambah pejabat ke warga yang sudah ada
                 $request->validate(array_merge($baseRules, [
                     'id_warga' => 'required|exists:wargas,id',
                 ]));
@@ -40,12 +39,12 @@ class RegisterPejabatController extends Controller
                 $warga = Warga::with('user')->findOrFail($request->id_warga);
                 $user = $warga->user;
 
-                $rt = RT::findOrFail($request->id_rt);
-                if ($rt->id_rw != $request->id_rw) {
-                    return response()->json(['error' => 'RT dan RW tidak cocok'], 400);
-                }
                 
                 if ($request->role == "PejabatRT" && $warga->id_rt != $request->id_rt) {
+                    $rt = RT::findOrFail($request->id_rt);
+                    if ($rt->id_rw != $request->id_rw) {
+                        return response()->json(['error' => 'RT dan RW tidak cocok'], 400);
+                    }
                      return response()->json(['error' => 'Pejabat RT harus berasal dari RT yang bersangkutan.'], 400);
                 }
 
@@ -54,11 +53,12 @@ class RegisterPejabatController extends Controller
                     return response()->json(['error' => 'Pejabat RW harus berasal dari RW yang bersangkutan.'], 400);
                 }
 
+                $ttdUrl = null;
+                if ($request->hasFile('ttd')) {
+                    $ttdPath = $request->file('ttd')->store('public/ttd');
+                    $ttdUrl = Storage::url($ttdPath);
+                }
 
-                $ttdPath = $request->file('ttd')->store('public/ttd');
-                $ttdUrl = Storage::url($ttdPath);
-
-                
                 if ($user->role !== $request->role) {
                     $user->update(['role' => $request->role]);
                 }
@@ -87,7 +87,7 @@ class RegisterPejabatController extends Controller
 
                 DB::commit();
                 return response()->json([
-                    "message" => "Pejabat berhasil ditambahkan untuk warga yang sudah ada",
+                    "message" => "Pejabat " . $request->role . " berhasil ditambahkan",
                     "data" => [
                         "user" => $user->fresh(),
                         "warga" => $warga,
@@ -101,92 +101,7 @@ class RegisterPejabatController extends Controller
                 ], 200);
 
 
-            } else {
-                // Scenario 2: Tambah warga baru dan menjadikan sebagai pejabat
-                $request->validate(array_merge($baseRules, [
-                    "email" => "required|email|unique:users",
-                    "password" => ['required', Rules\Password::defaults()],
-                    "nama" => "required|string",
-                    "nomer_kk" => "required|numeric|unique:wargas,nomor_kk",
-                    "nik" => "required|numeric|unique:wargas,nik",
-                    "jenis_kelamin" => "required|in:Laki-Laki,Perempuan",
-                    "phone" => "required|numeric",
-                    "tempat_lahir" => "required|string",
-                    "tanggal_lahir" => "required|date",
-                    "alamat" => "required|string",
-                    "kabupaten" => "required|string",
-                    "provinsi" => "required|string",
-                ]));
-
-                $rt = RT::findOrFail($request->id_rt);
-                if ($rt->id_rw != $request->id_rw) {
-                    return response()->json(['error' => 'RT dan RW tidak cocok'], 400);
-                }
-
-                $ttdPath = $request->file('ttd')->store('public/ttd');
-                $ttdUrl = Storage::url($ttdPath);
-
-                $user = User::create([
-                    "email" => $request->email,
-                    "password" => Hash::make($request->password),
-                    "role" => $request->role,
-                    "status" => 1,
-                ]);
-
-                $detailAlamat = DetailAlamat::create([
-                    "alamat" => $request->alamat,
-                    "kabupaten" => $request->kabupaten,
-                    "provinsi" => $request->provinsi,
-                ]);
-
-                $warga = Warga::create([
-                    "id_users" => $user->id,
-                    "id_alamat" => $detailAlamat->id,
-                    "id_rt" => $request->id_rt,
-                    "nama" => $request->nama,
-                    "nomor_kk" => $request->nomer_kk,
-                    "nik" => $request->nik,
-                    "jenis_kelamin" => $request->jenis_kelamin,
-                    "phone" => $request->phone,
-                    "tempat_lahir" => $request->tempat_lahir,
-                    "tanggal_lahir" => $request->tanggal_lahir,
-                ]);
-
-                if ($request->role == "PejabatRT") {
-                    pejabatRT::create([
-                        "id_rt" => $request->id_rt,
-                        "id_warga" => $warga->id,
-                        "periode_mulai" => $request->periode_mulai,
-                        "periode_selesai" => $request->periode_selesai,
-                        "ttd" => $ttdUrl,
-                    ]);
-                } elseif ($request->role == "PejabatRW") {
-                    pejabatRW::create([
-                        "id_rw" => $request->id_rw,
-                        "id_warga" => $warga->id,
-                        "periode_mulai" => $request->periode_mulai,
-                        "periode_selesai" => $request->periode_selesai,
-                        "ttd" => $ttdUrl,
-                    ]);
-                }
-
-                DB::commit();
-                event(new Registered($user));
-                return response()->json([
-                    "message" => "Registrasi pejabat berhasil",
-                    "data" => [
-                        "user" => $user,
-                        "warga" => $warga,
-                        "detailAlamat" => $detailAlamat,
-                        "ttd" => $ttdUrl,
-                        "role" => $request->role,
-                        "periode_mulai" => $request->periode_mulai,
-                        "periode_selesai" => $request->periode_selesai,
-                        "id_rt" => $request->id_rt,
-                        "id_rw" => $request->id_rw,
-                    ],
-                ], 200);
-            }
+            } 
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             DB::rollBack();
@@ -301,43 +216,31 @@ public function updateRT(Request $request, $id)
 {
     DB::beginTransaction();
     try {
-        // Cari RT dan pejabat RT terkait
-        $rt = RT::findOrFail($id);
-        $pejabatRT = pejabatRT::where('id_rt', $id)->first();
-
-        if (!$pejabatRT) {
-            DB::rollBack();
-            return response()->json(['error' => 'Pejabat RT not found for the given RT ID'], 404);
-        }
-
+        $pejabatRT = pejabatRT::where('id_rt', $id)->firstOrFail();
         $warga = Warga::findOrFail($pejabatRT->id_warga);
         $user = User::findOrFail($warga->id_users);
 
         $request->validate([
-            'nama' => 'required|string',
-            'nama_rt' => 'required|string',
-            'email' => 'required|email|unique:users,email,'.$user->id,
+            'id_warga' => 'required|string',
             'periode_mulai' => 'required|integer',
             'periode_selesai' => 'required|integer',
             'ttd' => 'nullable|file|mimes:png,jpg,jpeg|max:2048',
         ]);
 
-        // Update warga nama
-        $warga->nama = $request->nama;
-        $warga->save();
-
-        // Update RT nama
-        $rt->nama_rt = $request->nama_rt;
-        $rt->save();
-
-        // Update user email
-        $user->email = $request->email;
-        $user->save();
+        if ($request->id_warga != $warga->id) {
+            $user->role = 'Warga';
+            $user->save();
+            $newWarga = Warga::findOrFail($request->id_warga);
+            $newUser = User::findOrFail($newWarga->id_users);
+            $newUser->role = 'PejabatRT';
+            $newUser->save();
+        }
 
         // Update pejabat RT
+        $pejabatRT->id_warga = $request->id_warga;
         $pejabatRT->periode_mulai = $request->periode_mulai;
         $pejabatRT->periode_selesai = $request->periode_selesai;
-        if ($request->has('ttd')) {
+        if ($request->hasFile('ttd')) {
             if ($pejabatRT->ttd) {
                 Storage::delete(str_replace('/storage', 'public', $pejabatRT->ttd));
             }
@@ -349,13 +252,7 @@ public function updateRT(Request $request, $id)
         $pejabatRT->save();
 
         DB::commit();
-        return response()->json(['message' => 'RT berhasil diperbarui'], 200);
-    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-        DB::rollBack();
-        return response()->json([
-            'error' => 'Data not found',
-            'message' => $e->getMessage()
-        ], 404);
+        return response()->json(['message' => 'RT berhasil diperbarui ' . $warga->nama . ' menjadi ' . $newWarga->nama], 200);
     } catch (\Exception $e) {
         DB::rollBack();
         return response()->json([
@@ -369,33 +266,32 @@ public function updateRW(Request $request, $id)
 {
     DB::beginTransaction();
     try {
-        $rw = RW::findOrFail($id);
         $pejabatRW = pejabatRW::where('id_rw', $id)->firstOrFail();
         $warga = Warga::findOrFail($pejabatRW->id_warga);
         $user = User::findOrFail($warga->id_users);
 
         $request->validate([
-            'nama' => 'required|string',
-            'nama_rw' => 'required|string',
-            'email' => 'required|email|unique:users,email,'.$user->id,
+            'id_warga' => 'required|string',
             'periode_mulai' => 'required|integer',
             'periode_selesai' => 'required|integer',
             'ttd' => 'nullable|file|mimes:png,jpg,jpeg|max:2048',
         ]);
 
-        // Update warga nama
-        $warga->nama = $request->nama;
-        $warga->save();
+        // Jika id_warga berbeda, maka update role user
+        if ($request->id_warga != $warga->id) {
+            // Update role user lama menjadi Warga
+            $user->role = 'Warga';
+            $user->save();
 
-        // Update RW nama
-        $rw->nama_rw = $request->nama_rw;
-        $rw->save();
-
-        // Update user email
-        $user->email = $request->email;
-        $user->save();
+            // Update role user baru menjadi PejabatRW
+            $newWarga = Warga::findOrFail($request->id_warga);
+            $newUser = User::findOrFail($newWarga->id_users);
+            $newUser->role = 'PejabatRW';
+            $newUser->save();
+        }
 
         // Update pejabat RW
+        $pejabatRW->id_warga = $request->id_warga;
         $pejabatRW->periode_mulai = $request->periode_mulai;
         $pejabatRW->periode_selesai = $request->periode_selesai;
         if ($request->has('ttd')) {
@@ -410,7 +306,7 @@ public function updateRW(Request $request, $id)
         $pejabatRW->save();
 
         DB::commit();
-        return response()->json(['message' => 'RW berhasil diperbarui'], 200);
+        return response()->json(['message' => 'RW berhasil diperbarui ' . $warga->nama . ' menjadi ' . $newWarga->nama], 200);
     } catch (\Exception $e) {
         DB::rollBack();
         return response()->json([
@@ -424,7 +320,6 @@ public function deleteRT(Request $request, $id)
 {
     DB::beginTransaction();
     try {
-        $rt = RT::findOrFail($id);
         $pejabatRT = pejabatRT::where('id_rt', $id)->first();
 
         if (!$pejabatRT) {
@@ -435,7 +330,6 @@ public function deleteRT(Request $request, $id)
         $warga = Warga::findOrFail($pejabatRT->id_warga);
         $user = User::findOrFail($warga->id_users);
 
-        // 1. Delete signature file if exists
         if ($pejabatRT && $pejabatRT->ttd) {
             Storage::delete(str_replace('/storage', 'public', $pejabatRT->ttd));
         }
@@ -465,12 +359,10 @@ public function deleteRW(Request $request, $id)
 {
     DB::beginTransaction();
     try {
-        $rw = RW::findOrFail($id);
         $pejabatRW = pejabatRW::where('id_rw', $id)->firstOrFail();
         $warga = Warga::findOrFail($pejabatRW->id_warga);
         $user = User::findOrFail($warga->id_users);
 
-        // 1. Delete signature file if exists
         if ($pejabatRW && $pejabatRW->ttd) {
             Storage::delete(str_replace('/storage', 'public', $pejabatRW->ttd));
         }
@@ -487,6 +379,115 @@ public function deleteRW(Request $request, $id)
         return response()->json([
             'message' => 'Terjadi kesalahan saat menghapus RW',
             'error' => $e->getMessage(),
+        ], 500);
+    }
+}
+
+public function getRTDetails($id_rt_entity)
+{
+    try {
+        $rt = RT::with('rw')->find($id_rt_entity);
+
+        if (!$rt) {
+            return response()->json([
+                'success' => false,
+                'message' => 'RT tidak ditemukan',
+            ], 404);
+        }
+
+        $pejabatModel = pejabatRT::where('id_rt', $rt->id)
+                            ->with(['warga', 'warga.user']) 
+                            ->latest('periode_mulai')
+                            ->first();
+
+        $pejabatDetails = null;
+        if ($pejabatModel && $pejabatModel->warga) {
+            $pejabatDetails = [
+                'id_pejabat_rt' => $pejabatModel->id,
+                'id_warga' => $pejabatModel->id_warga,
+                'nama_warga' => $pejabatModel->warga->nama,
+                'nik_warga' => $pejabatModel->warga->nik,
+                'user_email' => $pejabatModel->warga->user ? $pejabatModel->warga->user->email : null,
+                'periode_mulai' => $pejabatModel->periode_mulai,
+                'periode_selesai' => $pejabatModel->periode_selesai,
+                'ttd_url' => $pejabatModel->ttd,
+            ];
+        }
+
+        $rtDetails = [
+            'id' => $rt->id, 
+            'nama_rt' => $rt->nama_rt,
+            'id_rw' => $rt->id_rw, 
+            'rw' => $rt->rw ? [
+                'id_rw' => $rt->rw->id, 
+                'nama_rw' => $rt->rw->nama_rw
+            ] : null,
+            'pejabat' => $pejabatDetails
+        ];
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Detail Data RT berhasil diambil',
+            'data' => $rtDetails
+        ], 200);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Gagal mengambil detail data RT',
+            'error' => $e->getMessage()
+        ], 500);
+    }
+}
+
+public function getRWDetails($id_rw_entity)
+{
+    try {
+        $rw = RW::find($id_rw_entity);
+
+        if (!$rw) {
+            return response()->json([
+                'success' => false,
+                'message' => 'RW tidak ditemukan',
+            ], 404);
+        }
+
+        $pejabatModel = pejabatRW::where('id_rw', $rw->id) 
+                            ->with(['warga', 'warga.user']) 
+                            ->latest('periode_mulai')
+                            ->first();
+
+        $pejabatDetails = null;
+        if ($pejabatModel && $pejabatModel->warga) {
+            $pejabatDetails = [
+                'id_pejabat_rw' => $pejabatModel->id,
+                'id_warga' => $pejabatModel->id_warga,
+                'nama_warga' => $pejabatModel->warga->nama,
+                'nik_warga' => $pejabatModel->warga->nik,
+                'user_email' => $pejabatModel->warga->user ? $pejabatModel->warga->user->email : null,
+                'periode_mulai' => $pejabatModel->periode_mulai,
+                'periode_selesai' => $pejabatModel->periode_selesai,
+                'ttd_url' => $pejabatModel->ttd,
+            ];
+        }
+
+        $rwDetails = [
+            'id_rw' => $rw->id, 
+            'nama_rw' => $rw->nama_rw,
+            'pejabat' => $pejabatDetails
+        ];
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Detail Data RW berhasil diambil',
+            'data' => $rwDetails
+        ], 200);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Gagal mengambil detail data RW',
+            'error' => $e->getMessage()
         ], 500);
     }
 }

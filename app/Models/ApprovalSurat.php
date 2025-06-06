@@ -10,8 +10,8 @@ class ApprovalSurat extends Model
     use HasFactory;
     protected $fillable = [
         'id_pengajuan',
-        'id_pejabat_rt',
-        'id_pejabat_rw',
+        'id_rt',
+        'id_rw',
         'status_approval',
         'catatan',
         'approved_at',
@@ -22,13 +22,13 @@ class ApprovalSurat extends Model
         return $this->belongsTo(PengajuanSurat::class, 'id_pengajuan');
     }
 
-    public function pejabatRT()
+    public function RT()
     {
-        return $this->belongsTo(pejabatRT::class, 'id_pejabat_rt');
+        return $this->belongsTo(RT::class, 'id_rt');
     }
 
-    public function pejabatRW()
+    public function RW()
     {
-        return $this->belongsTo(pejabatRW::class, 'id_pejabat_rw');
+        return $this->belongsTo(RW::class, 'id_rw');
     }
 }

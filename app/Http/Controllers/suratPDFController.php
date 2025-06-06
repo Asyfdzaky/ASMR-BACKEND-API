@@ -19,16 +19,15 @@ class suratPDFController extends Controller
         $this->suratService = $suratService;
     }
 
-     public function cekDanGenerateSurat(ApprovalSurat $approval)
+     public function generateAndSave($pengajuan)
     {
+        $approval = ApprovalSurat::where('id_pengajuan', $pengajuan)->firstOrFail();
         Log::info('Cek approval untuk generate surat', $approval->toArray());
 
         // Cek apakah semua sudah approved
         if (
-            $approval->status_rt === 'approved' &&
-            $approval->status_rw === 'approved' &&
-            $approval->tanggal_approval_rt &&
-            $approval->tanggal_approval_rw &&
+            $approval->status_approval === 'Disetujui_RW' &&
+            $approval->approved_at &&
             $approval->status_approval !== 'Selesai'
         ) {
             // Generate PDF surat
@@ -36,8 +35,8 @@ class suratPDFController extends Controller
 
             // Update pengajuan dan approval
             $approval->pengajuanSurat->update([
-                'status_pengajuan' => 'Selesai',
-                'pdf_path' => $pdfPath,
+                'status' => 'Disetujui',
+                'file_surat' => $pdfPath,
             ]);
 
             $approval->update([
@@ -52,31 +51,32 @@ class suratPDFController extends Controller
 
         return response()->json([
             'message' => 'Syarat approval belum lengkap atau sudah selesai.',
+            'approval' => $approval->toArray(),
         ]);
     }
 
 
     public function download(PengajuanSurat $pengajuan)
     {
-        if (!Storage::disk('public')->exists($pengajuan->pdf_path)) {
+        if (!Storage::disk('public')->exists($pengajuan->file_surat)) {
             abort(404, 'File surat tidak ditemukan');
         }
 
         return response()->download(
-            storage_path('app/public/' . $pengajuan->pdf_path),
-            basename($pengajuan->pdf_path),
+            storage_path('app/public/' . $pengajuan->file_surat),
+            basename($pengajuan->file_surat),
             ['Content-Type' => 'application/pdf']
         );
     }
 
     public function preview(PengajuanSurat $pengajuan)
     {
-        if (!Storage::disk('public')->exists($pengajuan->pdf_path)) {
+        if (!Storage::disk('public')->exists($pengajuan->file_surat)) {
             abort(404, 'File surat tidak ditemukan');
         }
 
         return response()->file(
-            storage_path('app/public/' . $pengajuan->pdf_path),
+            storage_path('app/public/' . $pengajuan->file_surat),
             ['Content-Type' => 'application/pdf']
         );
     }

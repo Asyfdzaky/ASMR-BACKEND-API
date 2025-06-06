@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class RW extends Model
 {
     use HasFactory;
-    protected $table = 'RW';
+    protected $table = 'rw';
     protected $fillable = ['nama_rw'];
 
     public function rt()

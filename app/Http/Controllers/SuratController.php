@@ -74,7 +74,7 @@ class SuratController extends Controller
             }
 
             $surat = $surat->whereHas("approvalSurat", function ($q) {
-                $q->where('status_approval', 'Disetujui_RT');
+                $q->whereIn('status_approval', ['Disetujui_RT', 'Disetujui_RW']);
             });
 
             if($request->filled('limit')){
@@ -95,8 +95,8 @@ class SuratController extends Controller
         $request->validate([
             'status_approval' => 'required|in:Disetujui_RT,Ditolak_RT,Disetujui_RW,Ditolak_RW,Selesai',
             'catatan' => 'nullable|string',
-            'id_pejabat_rt' => 'nullable|exists:pejabat_rt,id',
-            'id_pejabat_rw' => 'nullable|exists:pejabat_rw,id',
+            'id_rt' => 'nullable|exists:rt,id',
+            'id_rw' => 'nullable|exists:rw,id',
         ]);
 
         try {
@@ -109,16 +109,16 @@ class SuratController extends Controller
             $approval->approved_at = now();
 
             if (in_array($request->status_approval, ['Disetujui_RT', 'Ditolak_RT'])) {
-                $approval->id_pejabat_rt = $request->id_pejabat_rt;
+                $approval->id_rt = $request->id_rt;
             }
 
             if (in_array($request->status_approval, ['Disetujui_RW', 'Ditolak_RW'])) {
-                $approval->id_pejabat_rw = $request->id_pejabat_rw;
+                $approval->id_rw = $request->id_rw;
             }
 
             $approval->save();
 
-            $pengajuan = PengajuanSurat::findOrFail($id_pengajuan);
+            $pengajuan = PengajuanSurat::where('id', $approval->id_pengajuan)->firstOrFail();
             $pengajuan->status = match($request->status_approval) {
                 'Disetujui_RT' => 'Diproses_RW',
                 'Disetujui_RW' => 'Disetujui',
@@ -129,26 +129,34 @@ class SuratController extends Controller
             $pengajuan->save();
 
             // Notifikasi Warga
-            if (Notifikasi::where('id_pengajuan_surat', $pengajuan->id)->andWhere('id_user', $approval->pengajuanSurat->warga->id_users)->notExist()) {
+            if (Notifikasi::where('id_pengajuan_surat', $pengajuan->id)->where('id_user', $pengajuan->warga->id_users)->get()->isEmpty()) {
                 Notifikasi::create([
-                        'id_user' => $approval->pengajuanSurat->warga->id_users,
+                        'id_user' => $pengajuan->warga->id_users,
                         'id_pengajuan_surat' => $pengajuan->id,
                         'jenis_notif' => 'surat',
-                        'pesan' => 'Pengajuan surat baru telah ' + $pengajuan->status + '.',
+                        'pesan' => 'Pengajuan surat baru telah ' . $pengajuan->status . '.',
                     ]);
             } else {
                 Notifikasi::where('id_pengajuan_surat', $pengajuan->id)
+                    ->where('id_user', $pengajuan->warga->id_users)
                     ->update(['pesan' => 'Pengajuan surat telah ' . $pengajuan->status . '.']);
             }
 
             // Notifikasi Pejabat RW
             if ($request->status_approval === 'Disetujui_RT') {
-                Notifikasi::create([
-                    'id_user' => $approval->pejabatRw->warga->id_users,
-                    'id_pengajuan_surat' => $pengajuan->id,
-                    'jenis_notif' => 'surat',
-                    'pesan' => 'Pengajuan surat baru telah ' . $pengajuan->status . '.',
-                ]);
+                $rw = $pengajuan->warga->rt->rw;
+                if ($rw && $rw->pejabatRW) {
+                    foreach ($rw->pejabatRW as $pejabat) {
+                        if ($pejabat->warga && $pejabat->warga->id_users) {
+                            Notifikasi::create([
+                                'id_user' => $pejabat->warga->id_users,
+                                'id_pengajuan_surat' => $pengajuan->id,
+                                'jenis_notif' => 'surat',
+                                'pesan' => 'Pengajuan surat baru telah ' . $pengajuan->status . '.',
+                            ]);
+                        }
+                    }
+                }
             }
             
             DB::commit();
@@ -169,7 +177,7 @@ class SuratController extends Controller
     // 4. Menampilkan semua pengajuan surat (opsional filter)
     public function getAllPengajuanSurat(Request $request)
     {
-        $query = PengajuanSurat::with(['warga.rt.rw', 'approvalSurat']);
+        $query = PengajuanSurat::with(['warga.rt.rw', 'approvalSurat', 'detailPemohon']);
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);

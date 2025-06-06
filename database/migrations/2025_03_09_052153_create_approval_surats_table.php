@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('approval_surats', function (Blueprint $table) {
             $table->id();
             $table->foreignId('id_pengajuan')->constrained('pengajuan_surats')->onDelete('cascade');
-            $table->foreignId('id_pejabat_rt')->constrained('pejabat_rt')->onDelete('cascade');
-            $table->foreignId('id_pejabat_rw')->constrained('pejabat_rw')->onDelete('cascade');
+            $table->foreignId('id_rt')->constrained('rt')->onDelete('cascade');
+            $table->foreignId('id_rw')->constrained('rw')->onDelete('cascade');
             $table->enum('status_approval', ['Pending', 'Disetujui_RT', 'Ditolak_RT', 'Disetujui_RW', 'Ditolak_RW', 'Selesai']);
             $table->text('catatan')->nullable();
             $table->timestamp('approved_at')->nullable();

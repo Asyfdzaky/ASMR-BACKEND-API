@@ -85,8 +85,8 @@ class DummyDataSeeder extends Seeder
         DB::table('approval_surats')->insert([
             // Assuming 'Pending_RT' is a valid enum value for status_approval.
             // Ensure id_pejabat_rt and id_pejabat_rw correspond to existing records.
-            ['id' => 1, 'id_pengajuan' => 1, 'id_pejabat_rt' => 1, 'id_pejabat_rw' => 1, 'status_approval' => 'Pending', 'catatan' => 'Menunggu persetujuan RT', 'approved_at' => null, 'created_at' => now(), 'updated_at' => now()],
-            ['id' => 2, 'id_pengajuan' => 2, 'id_pejabat_rt' => 2, 'id_pejabat_rw' => 2, 'status_approval' => 'Pending', 'catatan' => 'Menunggu persetujuan RT', 'approved_at' => null, 'created_at' => now(), 'updated_at' => now()],
+            ['id' => 1, 'id_pengajuan' => 1, 'id_rt' => 1, 'id_rw' => 1, 'status_approval' => 'Pending', 'catatan' => 'Menunggu persetujuan RT', 'approved_at' => null, 'created_at' => now(), 'updated_at' => now()],
+            ['id' => 2, 'id_pengajuan' => 2, 'id_rt' => 3, 'id_rw' => 2, 'status_approval' => 'Pending', 'catatan' => 'Menunggu persetujuan RT', 'approved_at' => null, 'created_at' => now(), 'updated_at' => now()],
         ]);
 
         // program_kerjas

@@ -94,7 +94,7 @@ Route::middleware('auth:sanctum')->prefix('biodata')->group(function () {
 // GRAFIK
 // -------------------------
 Route::middleware('auth:sanctum')->prefix('grafik')->group(function () {
-    Route::get('/jumlah-pengajuan-bulan', [DiagramController::class, 'jumlahPengajuanPerBulan']);
+    Route::post('/jumlah-pengajuan-bulan', [DiagramController::class, 'jumlahPengajuanPerBulan']);
     Route::get('/jumlah-pengajuan-jenis', [DiagramController::class, 'jumlahPengajuanPerJenis']);
 });
 

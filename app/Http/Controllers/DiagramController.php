@@ -8,54 +8,60 @@ use Illuminate\Support\Facades\DB;
 
 class DiagramController extends Controller
 {
-     // Data pengajuan surat per bulan untuk grafik (tahun ini)
     public function jumlahPengajuanPerBulan(Request $request)
     {
         $year = $request->input('year', date('Y'));
+        $half = $request->input('half');
         $monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
+        $data = PengajuanSurat::select(
+            DB::raw('MONTH(created_at) as bulan'),
+            'status',
+            'jenis_surat',
+            'id_rw',
+            'created_at'
+        )->with('rw')
+            ->whereYear('created_at', $year)
+            ->whereIn('status', ['Disetujui', 'Selesai', 'Ditolak'])
+            ->orderBy('created_at')
+            ->get();
+
         $result = [];
-        for ($m = 0; $m < 12; $m++) {
-            $result[] = [
-                'name' => $monthNames[$m],
-                'diterima' => 0,
-                'ditolak' => 0,
+        foreach ($monthNames as $index => $name) {
+            $result[$index] = [
+                'bulan' => $name,
+                'pengajuan' => [] 
             ];
         }
-
-        // Ambil data jumlah pengajuan per bulan dan status di tahun tertentu
-        $data = PengajuanSurat::select(
-                    DB::raw('MONTH(created_at) as bulan'),
-                    'status',
-                    DB::raw('COUNT(*) as total_status')
-                )
-                ->whereYear('created_at', $year)
-                ->whereIn('status', ['Disetujui', 'Selesai', 'Ditolak'])
-                ->groupBy(DB::raw('MONTH(created_at)'), 'status')
-                ->orderBy('bulan')
-                ->get();
 
         foreach ($data as $item) {
             $monthIndex = $item->bulan - 1;
 
-            if ($monthIndex >= 0 && $monthIndex < 12) {
-                if (in_array($item->status, ['Disetujui', 'Selesai'])) {
-                    $result[$monthIndex]['diterima'] += $item->total_status;
-                } elseif ($item->status == 'Ditolak') {
-                    $result[$monthIndex]['ditolak'] += $item->total_status;
-                }
-            }
+            $result[$monthIndex]['pengajuan'][] = [
+                'status' => $item->status,
+                'jenis_surat' => $item->jenis_surat,
+                'id_rw' => $item->id_rw,
+                'nama_rw' => $item->rw ? $item->rw->nama_rw : null,
+                'tanggal' => $item->created_at->format('Y-m-d H:i:s'),
+            ];
         }
 
-        return response()->json($result);
+        if ($half === 'start') {
+            $result = array_slice($result, 0, 6);
+        } elseif ($half === 'end') {
+            $result = array_slice($result, 6, 6);
+        }
+
+        return response()->json(array_values($result));
     }
+
 
     // Data jumlah pengajuan berdasarkan jenis surat
     public function jumlahPengajuanPerJenis()
     {
         $data = PengajuanSurat::select('jenis_surat', DB::raw('COUNT(*) as total'))
-                ->groupBy('jenis_surat')
-                ->get();
+            ->groupBy('jenis_surat')
+            ->get();
 
         return response()->json($data);
     }

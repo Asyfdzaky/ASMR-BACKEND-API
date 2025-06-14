@@ -196,6 +196,52 @@ class RegisterPejabatController extends Controller
 //     }
 // }
 
+public function storeJabatanRT(Request $request){
+    try {
+        $request->validate([
+            'nama_rt' => 'required|string',
+            'id_rw' => 'required|exists:rw,id',
+        ]);
+
+        $rt = RT::create([
+            'nama_rt' => $request->nama_rt,
+            'id_rw' => $request->id_rw,
+        ]);
+
+        return response()->json([
+            'message' => 'Jabatan RT berhasil ditambahkan',
+            'data' => $rt,
+        ], 200);
+    } catch (\Exception $e) {
+        return response()->json([
+            'message' => 'Terjadi kesalahan saat menambahkan jabatan RT',
+            'error' => $e->getMessage()
+        ], 500);
+    }
+}
+
+public function storeJabatanRW(Request $request){
+    try {
+        $request->validate([
+            'nama_rw' => 'required|string',
+        ]);
+
+        $rw = RW::create([
+            'nama_rw' => $request->nama_rw,
+        ]);
+
+        return response()->json([
+            'message' => 'Jabatan RW berhasil ditambahkan',
+            'data' => $rw,
+        ], 200);
+    } catch (\Exception $e) {
+        return response()->json([
+            'message' => 'Terjadi kesalahan saat menambahkan jabatan RW',
+            'error' => $e->getMessage()
+        ], 500);
+    }
+}
+
 public function getWargaByNIK($nik)
 {
     try {
@@ -227,7 +273,9 @@ public function updateRT(Request $request, $id)
             'ttd' => 'nullable|file|mimes:png,jpg,jpeg|max:2048',
         ]);
 
-        if ($request->id_warga != $warga->id) {
+        $isChangeWarga = $request->id_warga != $warga->id;
+
+        if ($isChangeWarga) {
             $user->role = 'Warga';
             $user->save();
             $newWarga = Warga::findOrFail($request->id_warga);
@@ -252,7 +300,7 @@ public function updateRT(Request $request, $id)
         $pejabatRT->save();
 
         DB::commit();
-        return response()->json(['message' => 'RT berhasil diperbarui ' . $warga->nama . ' menjadi ' . $newWarga->nama], 200);
+        return response()->json(['message' => 'RT berhasil diperbarui ' . ($isChangeWarga ? $warga->nama . ' menjadi ' . $newWarga->nama : '')], 200);
     } catch (\Exception $e) {
         DB::rollBack();
         return response()->json([
@@ -277,8 +325,9 @@ public function updateRW(Request $request, $id)
             'ttd' => 'nullable|file|mimes:png,jpg,jpeg|max:2048',
         ]);
 
-        // Jika id_warga berbeda, maka update role user
-        if ($request->id_warga != $warga->id) {
+        $isChangeWarga = $request->id_warga != $warga->id;
+
+        if ($isChangeWarga) {
             // Update role user lama menjadi Warga
             $user->role = 'Warga';
             $user->save();
@@ -306,7 +355,7 @@ public function updateRW(Request $request, $id)
         $pejabatRW->save();
 
         DB::commit();
-        return response()->json(['message' => 'RW berhasil diperbarui ' . $warga->nama . ' menjadi ' . $newWarga->nama], 200);
+        return response()->json(['message' => 'RW berhasil diperbarui ' . ($isChangeWarga ? $warga->nama . ' menjadi ' . $newWarga->nama : '')], 200);
     } catch (\Exception $e) {
         DB::rollBack();
         return response()->json([

@@ -76,6 +76,16 @@ class GetRtRW extends Controller
         ], 200);
     }
 
+    public function getAllRW()
+    {
+        $rws = RW::all();
+        return response()->json([
+            'success' => true,
+            'message' => 'List Semua Data RW',
+            'data' => $rws
+        ], 200);
+    }
+
     /**
      * List all RTs with parent RW info and active PejabatRT summary.
      */
@@ -144,7 +154,9 @@ class GetRtRW extends Controller
                 ], 404);
             }
 
-            $query = Warga::where('id_rt', $id_rt_entity);
+            $query = Warga::where('id_rt', $id_rt_entity)->whereHas('user', function($query){
+                $query->where('status_akun', 1);
+            });
 
             if ($request->has('search_nik')) {
                 $query->where('nik', 'like', '%' . $request->input('search_nik') . '%');
@@ -160,7 +172,7 @@ class GetRtRW extends Controller
                 return [
                     'id_warga' => $warga->id,
                     'nik' => $warga->nik,
-                    'nama_lengkap' => $warga->nama, // Assuming 'nama' field stores full name
+                    'nama_lengkap' => $warga->nama,
                 ];
             });
 
@@ -206,7 +218,9 @@ class GetRtRW extends Controller
                 ], 200);
             }
 
-            $query = Warga::whereIn('id_rt', $rt_ids)->with('rt'); // Eager load RT for asal_rt_nama
+            $query = Warga::whereIn('id_rt', $rt_ids)->with('rt')->whereHas('user', function($query){
+                $query->where('status_akun', 1);
+            });
 
             if ($request->has('search_nik')) {
                 $query->where('nik', 'like', '%' . $request->input('search_nik') . '%');
@@ -222,7 +236,7 @@ class GetRtRW extends Controller
                 return [
                     'id_warga' => $warga->id,
                     'nik' => $warga->nik,
-                    'nama_lengkap' => $warga->nama, // Assuming 'nama' field stores full name
+                    'nama_lengkap' => $warga->nama,
                     'asal_rt_id' => $warga->id_rt,
                     'asal_rt_nama' => $warga->rt ? $warga->rt->nama_rt : null, 
                 ];

@@ -8,6 +8,8 @@ use App\Models\pejabatRT;
 use App\Models\pejabatRW;
 use App\Models\Warga;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class GetRtRW extends Controller
 {
@@ -252,6 +254,44 @@ class GetRtRW extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal mengambil data warga berdasarkan RW',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function updateWilayah(Request $request, $role)
+    {
+        $validator = Validator::make($request->all(), [
+            'id' => 'required',
+            'nama_rt' => 'sometimes|string|max:255',
+            'nama_rw' => 'sometimes|string|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], 422);
+        }
+        try {
+            DB::beginTransaction();
+            if ($role == 'rt') {
+                $rt = RT::find($request->id);
+                $rt->nama_rt = $request->nama_rt;
+                $rt->save();
+            } else {
+                $rw = RW::find($request->id);
+                $rw->nama_rw = $request->nama_rw;
+                $rw->save();
+            }
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Wilayah berhasil diupdate',
+                'data' => $rt ?? $rw
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengupdate wilayah',
                 'error' => $e->getMessage()
             ], 500);
         }

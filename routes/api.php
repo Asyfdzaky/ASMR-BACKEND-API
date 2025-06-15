@@ -31,6 +31,7 @@ Route::prefix('wilayah')->group(function () {
     Route::get('/all-rt', [GetRtRW::class, 'getAllRTs']); // List semua RT dengan detail
     Route::get('/rt/{id_rt_entity}/warga', [GetRtRW::class, 'getWargaByRT']); // List warga by RT ID
     Route::get('/rw/{id_rw_entity}/warga', [GetRtRW::class, 'getWargaByRW']); // List warga by RW ID (scope)
+    Route::put('/{role}', [GetRtRW::class, 'updateWilayah']); // Update wilayah
 });
 
 // -------------------------

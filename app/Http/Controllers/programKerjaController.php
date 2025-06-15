@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Notifikasi;
 use App\Models\ProgramKerja;
 use App\Models\RW;
 use App\Models\User;
+use App\Models\Warga;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class programKerjaController extends Controller
@@ -52,6 +55,7 @@ class programKerjaController extends Controller
     }
     public function store(Request $request){
         try {
+            DB::beginTransaction();
             $user = auth('sanctum')->user();
 
             if ($user->role !== 'PejabatRW') {
@@ -98,12 +102,31 @@ class programKerjaController extends Controller
                 'id_rw' => $rw->id,
             ]);
 
+            $warga = Warga::whereHas('rt', function($query) use ($rw){
+                $query->where('id_rw', $rw->id);
+            })->get();
+
+            foreach($warga as $w){
+                $idUserWarga = $w->id_users;
+                if($idUserWarga){
+                    Notifikasi::create([
+                        'id_user' => $idUserWarga,
+                        'id_program_kerja' => $programKerja->id,
+                        'jenis_notif' => 'proker',
+                        'pesan' => 'Program Kerja baru telah dibuat.',
+                    ]);
+                }
+            }
+
+            DB::commit();
+
             return response()->json([
                 'success' => true,
                 'message' => 'Program Kerja created successfully',
                 'data' => $programKerja
             ], 201);
         } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json([
                 'success' => false,
                 'message' => 'Error creating Program Kerja',
@@ -149,6 +172,8 @@ class programKerjaController extends Controller
             $user = auth('sanctum')->user();
             $programKerja = ProgramKerja::findOrFail($id);
 
+            DB::beginTransaction();
+
             if ($user->role === 'PejabatRW') {
                 $rw = RW::where('id', $user->Warga->rt->rw->id)->first();
                 if (!$rw || $programKerja->id_rw !== $rw->id) {
@@ -184,17 +209,37 @@ class programKerjaController extends Controller
 
             $programKerja->update($request->all());
 
+            $warga = Warga::whereHas('rt', function($query) use ($programKerja){
+                $query->where('id_rw', $programKerja->id_rw);
+            })->get();
+
+            foreach($warga as $w){
+                $idUserWarga = $w->id_users;
+                if($idUserWarga){
+                    Notifikasi::create([
+                        'id_user' => $idUserWarga,
+                        'id_program_kerja' => $programKerja->id,
+                        'jenis_notif' => 'proker',
+                        'pesan' => 'Program Kerja baru telah diupdate.',
+                    ]);
+                }
+            }
+
+            DB::commit();
+
             return response()->json([
                 'success' => true,
                 'message' => 'Program Kerja updated successfully',
                 'data' => $programKerja
             ], 200);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            DB::rollBack();
             return response()->json([
                 'success' => false,
                 'message' => 'Program Kerja not found',
             ], 404);
         } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json([
                 'success' => false,
                 'message' => 'Error updating Program Kerja',
@@ -204,6 +249,7 @@ class programKerjaController extends Controller
     }
     public function destroy($id){
         try {
+            DB::beginTransaction();
             $user = auth('sanctum')->user();
             $programKerja = ProgramKerja::findOrFail($id);
 
@@ -223,16 +269,37 @@ class programKerjaController extends Controller
             }
 
             $programKerja->delete();
+
+            $warga = Warga::whereHas('rt', function($query) use ($rw){
+                $query->where('id_rw', $rw->id);
+            })->get();
+
+            foreach($warga as $w){
+                $idUserWarga = $w->id_users;
+                if($idUserWarga){
+                    Notifikasi::create([
+                        'id_user' => $idUserWarga,
+                        'id_program_kerja' => $programKerja->id,
+                        'jenis_notif' => 'proker',
+                        'pesan' => 'Program Kerja baru telah dihapus.',
+                    ]);
+                }
+            }
+
+            DB::commit();
+
             return response()->json([
                 'success' => true,
                 'message' => 'Program Kerja deleted successfully'
             ], 200);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            DB::rollBack();
             return response()->json([
                 'success' => false,
                 'message' => 'Program Kerja not found',
             ], 404);
         } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json([
                 'success' => false,
                 'message' => 'Error deleting Program Kerja',

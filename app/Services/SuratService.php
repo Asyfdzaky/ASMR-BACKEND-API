@@ -22,14 +22,6 @@ class SuratService
         $rt = $pengajuan->rt;
         $rw = $pengajuan->rw;
 
-        $ttd_rt_path = $rt->ttd 
-            ? storage_path('app/public/' . $rt->ttd) 
-            : public_path('img/placeholder_ttd.png');
-
-        $ttd_rw_path = $rw->ttd 
-            ? storage_path('app/public/' . $rw->ttd) 
-            : public_path('img/placeholder_ttd.png');
-
         $jenis_surat = match ($pengajuan->jenis_surat) {
             'Pengantar KTP', 'Keterangan Domisili', 'Surat Domisili Usaha' => $pengajuan->jenis_surat,
             default => 'Default',
@@ -39,6 +31,16 @@ class SuratService
         $detail_pemohon = $pengajuan->detailPemohon;
         $pejabat_rt = pejabatRT::where('id_rt', $warga->rt->id)->firstOrFail();
         $pejabat_rw = pejabatRW::where('id_rw', $warga->rt->rw->id)->firstOrFail();
+        
+        $ttd_rt_path = $pejabat_rt->ttd 
+            ? public_path($pejabat_rt->ttd)
+            : public_path('img/placeholder_ttd.png');
+
+        $ttd_rw_path = $pejabat_rw->ttd 
+            ? public_path($pejabat_rw->ttd)
+            : public_path('img/placeholder_ttd.png');
+            
+         Log::info('TTD rt:' . $ttd_rt_path);  
 
         $content = $this->replacePlaceholders($template->template_html, [
             'JENIS_SURAT' => $pengajuan->jenis_surat,

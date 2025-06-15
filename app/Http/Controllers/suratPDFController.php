@@ -19,9 +19,9 @@ class suratPDFController extends Controller
         $this->suratService = $suratService;
     }
 
-     public function generateAndSave($pengajuan)
+     public function generateAndSave($id)
     {
-        $approval = ApprovalSurat::where('id_pengajuan', $pengajuan)->firstOrFail();
+        $approval = ApprovalSurat::where('id_pengajuan', $id)->firstOrFail();
         Log::info('Cek approval untuk generate surat', $approval->toArray());
 
         // Cek apakah semua sudah approved

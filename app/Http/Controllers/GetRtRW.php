@@ -168,6 +168,10 @@ class GetRtRW extends Controller
                 $query->where('nama', 'like', '%' . $request->input('search_nama') . '%');
             }
 
+            $query->with('user')->whereHas('user', function($query){
+                $query->where('role', 'Warga');
+            });
+
             $wargaList = $query->select('id', 'nik', 'nama')->get();
 
             $result = $wargaList->map(function ($warga) {
@@ -231,6 +235,10 @@ class GetRtRW extends Controller
             if ($request->has('search_nama')) {
                 $query->where('nama', 'like', '%' . $request->input('search_nama') . '%');
             }
+
+            $query->with('user')->whereHas('user', function($query){
+                $query->where('role', 'Warga');
+            });
 
             $wargaList = $query->select('id', 'nik', 'nama', 'id_rt')->get();
 

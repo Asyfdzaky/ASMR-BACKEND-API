@@ -76,7 +76,7 @@ Route::middleware('auth:sanctum')->prefix('surat')->group(function () {
     Route::put('/{id_pengajuan}/approval', [SuratController::class, 'updateApprovalStatus']); // Approve/tolak
 
     // PDF Surat (akses tetap pakai auth:sanctum untuk keamanan)
-    Route::get('/{pengajuan}/generate', [SuratPDFController::class, 'generateAndSave']);   // Buat PDF
+    Route::get('/{id}/generate', [SuratPDFController::class, 'generateAndSave']);   // Buat PDF
     Route::get('/{pengajuan}/download', [SuratPDFController::class, 'download']);          // Download PDF
     Route::get('/{pengajuan}/preview', [SuratPDFController::class, 'preview']);            // Preview PDF
 });

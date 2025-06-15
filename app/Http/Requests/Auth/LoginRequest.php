@@ -7,6 +7,7 @@ use Illuminate\Support\Str;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 
@@ -38,34 +39,48 @@ class LoginRequest extends FormRequest
      *
      * @throws \Illuminate\Validation\ValidationException
      */
-    public function authenticate(): void
-    {
-        $this->ensureIsNotRateLimited();
+public function authenticate(): void
+{
+    $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
-            RateLimiter::hit($this->throttleKey());
+    $user = \App\Models\User::where('email', $this->email)->first();
 
-            throw ValidationException::withMessages([
-                'email' => __('auth.failed'),
-            ]);
-        }
-        $user = Auth::user();
-        if ($user->role !== 'Admin') {
-    if (!$user->status_akun) {
-        Auth::logout();
-
-        response()->json([
-            'message' => 'Akun Anda belum disetujui oleh admin.',
-        ], 401)->send();
-        
-        exit;
+    if (! $user) {
+        RateLimiter::hit($this->throttleKey());
+        throw ValidationException::withMessages([
+            'email' => 'Email tidak ditemukan.',
+        ]);
     }
+
+    if (! Hash::check($this->password, $user->password)) {
+        RateLimiter::hit($this->throttleKey());
+        throw ValidationException::withMessages([
+            'password' => 'Password salah.',
+        ]);
+    }
+
+    if (!Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+        RateLimiter::hit($this->throttleKey());
+        throw ValidationException::withMessages([
+            'email' => __('auth.failed'),
+        ]);
+    }
+
+    $user = Auth::user();
+    if ($user->role !== 'Admin') {
+        if (!$user->status_akun) {
+            Auth::logout();
+            response()->json([
+                'message' => 'Akun Anda belum disetujui oleh admin.',
+            ], 401)->send();
+            exit;
+        }
+    }
+
+    RateLimiter::clear($this->throttleKey());
 }
 
 
-        RateLimiter::clear($this->throttleKey());
-
-    }
     public function IsRemember(): bool
     {
         return $this->boolean('remember');

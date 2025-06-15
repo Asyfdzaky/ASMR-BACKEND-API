@@ -19,6 +19,6 @@ class RW extends Model
 
     public function pejabatRW()
     {
-        return $this->hasMany(pejabatRW::class, 'id_rw');
+        return $this->hasOne(pejabatRW::class, 'id_rw');
     }
 }

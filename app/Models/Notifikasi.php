@@ -16,6 +16,7 @@ class Notifikasi extends Model
         'id_user',
         'id_pengajuan_surat',
         'id_program_kerja',
+        'jenis_notif',
         'pesan',
         'tanggal'
     ];

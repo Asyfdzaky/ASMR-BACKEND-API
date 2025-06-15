@@ -15,6 +15,8 @@ class NotifikasiController extends Controller
         $user = Auth::user();
         $counts = [];
 
+        $notifikasiProker = Notifikasi::where('id_user', $user->id)->where('jenis_notif', 'proker')->count();
+
         switch ($user->role) {
             case 'Admin':
                 $rekapCount = Notifikasi::where('jenis_notif', 'surat')->
@@ -22,6 +24,7 @@ class NotifikasiController extends Controller
                     ->count();
 
                 $counts = [
+                    ['route' => 'dashboard', 'count' => $notifikasiProker],
                     ['route' => 'approval-role', 'count' => $rekapCount]
                 ];
                 break;
@@ -33,6 +36,7 @@ class NotifikasiController extends Controller
                     ->count();
 
                 $counts = [
+                    ['route' => 'dashboard', 'count' => $notifikasiProker],
                     ['route' => 'rekap-pengajuan', 'count' => 0],
                     ['route' => 'pengajuan-masalah', 'count' => $rekapCount]
                 ];
@@ -46,6 +50,7 @@ class NotifikasiController extends Controller
                         ->count();
 
                     $counts = [
+                        ['route' => 'dashboard', 'count' => $notifikasiProker],
                         ['route' => 'histori', 'count' => $historiCount]
                     ];
                 }

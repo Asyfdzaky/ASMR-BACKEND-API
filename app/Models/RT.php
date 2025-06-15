@@ -23,6 +23,6 @@ class RT extends Model
 
     public function pejabatRT()
     {
-        return $this->hasMany(pejabatRT::class, 'id_rt');
-    }
+        return $this->hasOne(pejabatRT::class, 'id_rt');
+    }    
 }
